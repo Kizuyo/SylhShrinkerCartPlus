@@ -1,0 +1,68 @@
+﻿## Fichiers binaires de build
+bin/
+obj/
+
+## Dossiers de publication
+publish/
+out/
+
+## Visual Studio
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.csproj.user
+
+## JetBrains Rider
+.idea/
+
+## Logs, crash dumps, etc.
+*.log
+*.tlog
+*.pdb
+*.svclog
+*.sdf
+*.cache
+*.dbmdl
+
+## fichiers temporaires
+*.tmp
+*.temp
+*.bak
+*.old
+*.orig
+
+## Backup Git conflictuels
+*.orig
+
+## Répertoires de test & coverage
+TestResults/
+*.coverage
+*.coveragexml
+*.code-coverage
+.ncrunch*
+*.nunit.xml
+*.VisualState.xml
+
+## Fichiers générés par dotnet watch
+**/node_modules/
+**/dist/
+
+## Packages NuGet (re-générables)
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+
+## Fichiers de dépendances locales
+*.deps.json
+
+## Autres trucs parasites
+_ReSharper*/
+*.resharper
+*.DotSettings.user
+*.sln.cache
+*.gpState
