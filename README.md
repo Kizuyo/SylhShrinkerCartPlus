@@ -17,7 +17,7 @@
 Enjoy smoother carts and cleaner gameplay. No more massive furniture bouncing out like a possessed fridge. 😉
 
 # ChangeLog
-### v0.0.7
+## v0.0.7
 - 🚀 Added a configuration menu to customize mod settings and fine-tune your experience.
 
 ## v0.0.6
