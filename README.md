@@ -14,6 +14,9 @@
 - ✅ **Restoration**: once an object leaves the cart, it gradually returns to its original size.
 - ✅ **Configuration**: You can change multiple things !
 
+## 💡 Bonus Features
+- ✅ **MaxSpawnableEnemyOrb**: You can define a new maximum number of spawnable Enemy Valuables (orbs), especially useful when combined with the shrinking mechanics
+
 Enjoy smoother carts and cleaner gameplay. No more massive furniture bouncing out like a possessed fridge. 😉
 
 # ChangeLog
