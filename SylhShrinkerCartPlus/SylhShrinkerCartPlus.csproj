@@ -18,7 +18,7 @@
         <HintPath>F:\Games\Steam\steamapps\common\REPO\REPO_Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
       </Reference>
       <Reference Include="BepInEx">
-        <HintPath>F:\Games\Steam\steamapps\common\REPO\BepInEx\core\BepInEx.dll</HintPath>
+        <HintPath>C:\Users\noelp\AppData\Roaming\Thunderstore Mod Manager\DataFolder\REPO\profiles\Best\BepInEx\core\BepInEx.dll</HintPath>
       </Reference>
       <Reference Include="UnityEngine">
         <HintPath>F:\Games\Steam\steamapps\common\REPO\REPO_Data\Managed\UnityEngine.dll</HintPath>
