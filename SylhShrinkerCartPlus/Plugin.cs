@@ -111,15 +111,4 @@ namespace SylhShrinkerCartPlus
                 originalScales.Remove(obj);
         }
     }
-
-    [HarmonyPatch(typeof(EnemyHealth))]
-    public static class EnemyValuablePatch
-    {
-        [HarmonyPostfix]
-        [HarmonyPatch("Awake")]
-        public static void UpdateSpawnValuableMax(EnemyHealth __instance)
-        {
-            __instance.spawnValuableMax = ConfigManager.maxSpawnableOrb.Value;
-        }
-    }
 }
