@@ -17,6 +17,13 @@
 Enjoy smoother carts and cleaner gameplay. No more massive furniture bouncing out like a possessed fridge. 😉
 
 # ChangeLog
+## v0.0.9
+- 🐛 Fixed a bug preventing objects from being reduced when more than one CART exists in a scene
+
+## v0.0.8
+- 🚀 Added configurable shrink values for Enemy Valuable types: Tiny, Medium, and Big
+- 🚀 Added a configuration option to keep shrink vualbes when they are removed from the CART
+
 ## v0.0.7
 - 🚀 Added a configuration menu to customize mod settings and fine-tune your experience.
 
