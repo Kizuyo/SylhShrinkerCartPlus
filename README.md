@@ -3,7 +3,7 @@
 > It was originally made for a small group of friends, so functionality may not be fully polished.  
 > Some objects might behave unexpectedly or not shrink perfectly depending on their setup.
 
-# Shrinker Cart Plus
+# Sylh Shrinker Cart Plus
 
 **A mod for R.E.P.O. that dynamically shrinks objects inside carts.**
 
@@ -13,6 +13,7 @@
 - ✅ **Safe limits**: avoids making large objects too small.
 - ✅ **Restoration**: once an object leaves the cart, it gradually returns to its original size.
 - ✅ **Configuration**: You can change multiple things !
+- ✅ **Only Valuable**: Only valuable will be shrinks, so you can still using C.A.R.T Cannon & Laser
 
 Enjoy smoother carts and cleaner gameplay. No more massive furniture bouncing out like a possessed fridge. 😉
 
