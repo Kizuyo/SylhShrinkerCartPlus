@@ -15,7 +15,7 @@ namespace SylhShrinkerCartPlus
         private const string mod_guid = "sylhaance.SylhShrinkerCartPlus";
         private const string mod_name = "Sylh Shrinker Cart Plus";
         private const string mod_version = "0.0.8";
-        
+
         private Harmony harmony;
         internal static ManualLogSource Log;
 
@@ -39,6 +39,8 @@ namespace SylhShrinkerCartPlus
 
         private static readonly HashSet<PhysGrabObject> objectsToShrink = new();
 
+        private static readonly Dictionary<PhysGrabCart, CartShrinkState> cartStates = new();
+
         private static readonly Dictionary<PhysGrabObject, Vector3> originalScales = new();
         private static float shrinkSpeed = ConfigManager.defaultShrinkSpeed.Value;
         private static float minScale = 0.20f;
@@ -55,32 +57,40 @@ namespace SylhShrinkerCartPlus
 
         public static void Postfix(PhysGrabCart __instance)
         {
+            CleanupCartStates();
+            
+            if (!cartStates.TryGetValue(__instance, out var state))
+            {
+                state = new CartShrinkState();
+                cartStates[__instance] = state;
+            }
+
             var items = itemsInCartRef(__instance);
             if (items == null) return;
 
-            objectsToShrink.RemoveWhere(obj => obj == null || !items.Contains(obj));
+            state.ObjectsToShrink.RemoveWhere(obj => obj == null || !items.Contains(obj));
 
             foreach (var item in items)
             {
                 if (item == null || !item.GetComponent<ValuableObject>())
                     continue;
 
-                if (!originalScales.ContainsKey(item))
+                if (!state.OriginalScales.ContainsKey(item))
                 {
-                    originalScales[item] = item.transform.localScale;
-                    objectsToShrink.Add(item);
+                    state.OriginalScales[item] = item.transform.localScale;
+                    state.ObjectsToShrink.Add(item);
                 }
             }
 
             List<PhysGrabObject> completedShrinks = new();
 
-            foreach (var item in objectsToShrink)
+            foreach (var item in state.ObjectsToShrink)
             {
-                if (item == null || !originalScales.ContainsKey(item))
+                if (item == null || !state.OriginalScales.ContainsKey(item))
                     continue;
 
                 ShrinkData data = ShrinkUtils.GetShrinkData(item);
-                Vector3 original = originalScales[item];
+                Vector3 original = state.OriginalScales[item];
                 Vector3 target = Vector3.Max(original * data.ShrinkFactor, Vector3.one * minScale);
 
                 item.transform.localScale =
@@ -91,24 +101,47 @@ namespace SylhShrinkerCartPlus
             }
 
             foreach (var item in completedShrinks)
-                objectsToShrink.Remove(item);
+                state.ObjectsToShrink.Remove(item);
 
-            // Optional: restore objects removed from the cart
-            List<PhysGrabObject> toRestore = new();
-            foreach (var kvp in originalScales)
+            // Restore logic
+            if (!ConfigManager.shouldKeepShrunk.Value)
             {
-                var obj = kvp.Key;
-                if (obj == null || items.Contains(obj)) continue;
+                List<PhysGrabObject> toRestore = new();
+                foreach (var kvp in state.OriginalScales)
+                {
+                    var obj = kvp.Key;
+                    if (obj == null || items.Contains(obj)) continue;
 
-                obj.transform.localScale =
-                    Vector3.MoveTowards(obj.transform.localScale, kvp.Value, shrinkSpeed * Time.deltaTime);
+                    obj.transform.localScale =
+                        Vector3.MoveTowards(obj.transform.localScale, kvp.Value, shrinkSpeed * Time.deltaTime);
 
-                if (Vector3.Distance(obj.transform.localScale, kvp.Value) < 0.01f)
-                    toRestore.Add(obj);
+                    if (Vector3.Distance(obj.transform.localScale, kvp.Value) < 0.01f)
+                        toRestore.Add(obj);
+                }
+
+                foreach (var obj in toRestore)
+                    state.OriginalScales.Remove(obj);
+            }
+        }
+        
+        private static void CleanupCartStates()
+        {
+            List<PhysGrabCart> cartsToRemove = new();
+
+            foreach (var kvp in cartStates)
+            {
+                var cart = kvp.Key;
+                if (cart == null || !cart.gameObject || cart.gameObject.scene.name == null)
+                {
+                    cartsToRemove.Add(cart);
+                }
             }
 
-            foreach (var obj in toRestore)
-                originalScales.Remove(obj);
+            foreach (var cart in cartsToRemove)
+            {
+                cartStates.Remove(cart);
+                Plugin.Log.LogInfo($"[Sylh ShrinkerCartPlus] Removed destroyed cart from tracking.");
+            }
         }
     }
 }

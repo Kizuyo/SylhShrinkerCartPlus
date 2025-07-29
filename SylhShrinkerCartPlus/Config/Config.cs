@@ -33,6 +33,8 @@ namespace SylhShrinkerCartPlus.Config
         public static ConfigEntry<bool> shouldShrinkVeryTall;
         public static ConfigEntry<float> shrinkFactorVeryTall;
         
+        public static ConfigEntry<bool> shouldKeepShrunk;
+        
         internal static void Initialize(Plugin plugin)
         {
             defaultShrinkSpeed = plugin.Config.Bind(
@@ -40,6 +42,13 @@ namespace SylhShrinkerCartPlus.Config
                 new ConfigDescription(
                     "The default shrink speed value.", 
                     new AcceptableValueRange<float>(0.60f, 0.99f)
+                )
+            );
+            
+            shouldKeepShrunk = plugin.Config.Bind(
+                "Options", "Keep Shrunk Valuable", false,
+                new ConfigDescription(
+                    "When activated, Keeps the item shrunk even after it's taken out of the cart."
                 )
             );
             
