@@ -14,10 +14,14 @@
 - ✅ **Restoration**: once an object leaves the cart, it gradually returns to its original size.
 - ✅ **Configuration**: You can change multiple things !
 - ✅ **Only Valuable**: Only valuable will be shrinks, so you can still using C.A.R.T Cannon & Laser
+- ✅ **Also change the mass**: You can activate an option to adjust the mass of shrunk objects inside the cart !
 
 Enjoy smoother carts and cleaner gameplay. No more massive furniture bouncing out like a possessed fridge. 😉
 
 # ChangeLog
+## v0.0.10
+- 🚀 Added a config option to adjust the mass of shrunk objects inside the cart
+
 ## v0.0.9
 - 🐛 Fixed a bug preventing objects from being reduced when more than one CART exists in a scene
 
