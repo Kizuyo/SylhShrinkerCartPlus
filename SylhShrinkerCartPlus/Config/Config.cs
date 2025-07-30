@@ -34,6 +34,8 @@ namespace SylhShrinkerCartPlus.Config
         public static ConfigEntry<float> shrinkFactorVeryTall;
         
         public static ConfigEntry<bool> shouldKeepShrunk;
+        public static ConfigEntry<bool> shouldChangingMass;
+        public static ConfigEntry<float> shrinkMassValue;
         
         internal static void Initialize(Plugin plugin)
         {
@@ -49,6 +51,20 @@ namespace SylhShrinkerCartPlus.Config
                 "Options", "Keep Shrunk Valuable", false,
                 new ConfigDescription(
                     "When activated, Keeps the item shrunk even after it's taken out of the cart."
+                )
+            );
+            
+            shouldChangingMass = plugin.Config.Bind(
+                "Options", "Changing Mass", true,
+                new ConfigDescription(
+                    "When activated, Item Mass will change when leaving / entering in the cart."
+                )
+            );
+            shrinkMassValue = plugin.Config.Bind(
+                "Options", "Shrink Mass Multiplier", 1.0f,
+                new ConfigDescription(
+                    "Value applied to the mass after shrink.",
+                    new AcceptableValueRange<float>(0.25f, 2.0f)
                 )
             );
             

@@ -29,6 +29,9 @@
       <Reference Include="UnityEngine.InputLegacyModule">
         <HintPath>F:\Games\Steam\steamapps\common\REPO\REPO_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
       </Reference>
+      <Reference Include="UnityEngine.PhysicsModule">
+        <HintPath>F:\Games\Steam\steamapps\common\REPO\REPO_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+      </Reference>
       <Reference Include="UnityEngine.UI">
         <HintPath>F:\Games\Steam\steamapps\common\REPO\REPO_Data\Managed\UnityEngine.UI.dll</HintPath>
       </Reference>

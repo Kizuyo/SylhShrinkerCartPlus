@@ -58,7 +58,7 @@ namespace SylhShrinkerCartPlus
         public static void Postfix(PhysGrabCart __instance)
         {
             CleanupCartStates();
-            
+
             if (!cartStates.TryGetValue(__instance, out var state))
             {
                 state = new CartShrinkState();
@@ -97,7 +97,14 @@ namespace SylhShrinkerCartPlus
                     Vector3.MoveTowards(item.transform.localScale, target, shrinkSpeed * Time.deltaTime);
 
                 if (Vector3.Distance(item.transform.localScale, target) < 0.01f)
+                {
+                    if (ConfigManager.shouldChangingMass.Value)
+                    {
+                        ShrinkMassUtils.ApplyShrinkedMass(item, data);
+                    }
+
                     completedShrinks.Add(item);
+                }
             }
 
             foreach (var item in completedShrinks)
@@ -112,18 +119,27 @@ namespace SylhShrinkerCartPlus
                     var obj = kvp.Key;
                     if (obj == null || items.Contains(obj)) continue;
 
+                    Vector3 original = kvp.Value;
+
                     obj.transform.localScale =
-                        Vector3.MoveTowards(obj.transform.localScale, kvp.Value, shrinkSpeed * Time.deltaTime);
+                        Vector3.MoveTowards(obj.transform.localScale, original, shrinkSpeed * Time.deltaTime);
 
                     if (Vector3.Distance(obj.transform.localScale, kvp.Value) < 0.01f)
+                    {
+                        if (ConfigManager.shouldChangingMass.Value)
+                        {
+                            ShrinkMassUtils.RestoreOriginalMass(obj);
+                        }
+
                         toRestore.Add(obj);
+                    }
                 }
 
                 foreach (var obj in toRestore)
                     state.OriginalScales.Remove(obj);
             }
         }
-        
+
         private static void CleanupCartStates()
         {
             List<PhysGrabCart> cartsToRemove = new();
