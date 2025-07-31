@@ -1,22 +1,25 @@
 ﻿using SylhShrinkerCartPlus.Config;
 using SylhShrinkerCartPlus.Models;
+using UnityEngine;
 
 namespace SylhShrinkerCartPlus.Utils
 {
     public class ShrinkUtils
     {
         private static float initialShrinkFactor = 1.0f;
-        
-        public static ShrinkData GetShrinkData(PhysGrabObject item)
+
+        public static ShrinkData GetShrinkData(
+            PhysGrabObject item,
+            ShrinkSpecificCaseData data
+        )
         {
             string itemName = NameUtils.CleanName(item.name);
-            float shrinkFactor = 0.20f;
 
             if (NameUtils.TryParseEnemyValuable(itemName, out string _, out string enemyType))
             {
                 if (ConfigManager.shouldShrinkEnemyOrbs.Value)
                 {
-                    shrinkFactor = enemyType switch
+                    data.ShrinkFactor = enemyType switch
                     {
                         "Small" => ConfigManager.shrinkEnemyOrbSmall.Value,
                         "Medium" => ConfigManager.shrinkEnemyOrbMedium.Value,
@@ -26,7 +29,7 @@ namespace SylhShrinkerCartPlus.Utils
                 }
                 else
                 {
-                    shrinkFactor = initialShrinkFactor;
+                    data.ShrinkFactor = initialShrinkFactor;
                 }
             }
             else
@@ -35,7 +38,7 @@ namespace SylhShrinkerCartPlus.Utils
                 {
                     if (levelValuables.tiny.Exists(v => NameUtils.CleanName(v.name) == itemName))
                     {
-                        shrinkFactor = (ConfigManager.shouldShrinkTiny.Value)
+                        data.ShrinkFactor = (ConfigManager.shouldShrinkTiny.Value)
                             ? ConfigManager.shrinkFactorTiny.Value
                             : initialShrinkFactor;
 
@@ -44,7 +47,7 @@ namespace SylhShrinkerCartPlus.Utils
 
                     if (levelValuables.small.Exists(v => NameUtils.CleanName(v.name) == itemName))
                     {
-                        shrinkFactor = (ConfigManager.shouldShrinkSmall.Value)
+                        data.ShrinkFactor = (ConfigManager.shouldShrinkSmall.Value)
                             ? ConfigManager.shrinkFactorSmall.Value
                             : initialShrinkFactor;
 
@@ -53,16 +56,15 @@ namespace SylhShrinkerCartPlus.Utils
 
                     if (levelValuables.medium.Exists(v => NameUtils.CleanName(v.name) == itemName))
                     {
-                        shrinkFactor = (ConfigManager.shouldShrinkMedium.Value)
+                        data.ShrinkFactor = (ConfigManager.shouldShrinkMedium.Value)
                             ? ConfigManager.shrinkFactorMedium.Value
                             : initialShrinkFactor;
-
                         break;
                     }
 
                     if (levelValuables.big.Exists(v => NameUtils.CleanName(v.name) == itemName))
                     {
-                        shrinkFactor = (ConfigManager.shouldShrinkBig.Value)
+                        data.ShrinkFactor = (ConfigManager.shouldShrinkBig.Value)
                             ? ConfigManager.shrinkFactorBig.Value
                             : initialShrinkFactor;
 
@@ -71,7 +73,7 @@ namespace SylhShrinkerCartPlus.Utils
 
                     if (levelValuables.wide.Exists(v => NameUtils.CleanName(v.name) == itemName))
                     {
-                        shrinkFactor = (ConfigManager.shouldShrinkWide.Value)
+                        data.ShrinkFactor = (ConfigManager.shouldShrinkWide.Value)
                             ? ConfigManager.shrinkFactorWide.Value
                             : initialShrinkFactor;
 
@@ -80,7 +82,7 @@ namespace SylhShrinkerCartPlus.Utils
 
                     if (levelValuables.tall.Exists(v => NameUtils.CleanName(v.name) == itemName))
                     {
-                        shrinkFactor = (ConfigManager.shouldShrinkTall.Value)
+                        data.ShrinkFactor = (ConfigManager.shouldShrinkTall.Value)
                             ? ConfigManager.shrinkFactorTall.Value
                             : initialShrinkFactor;
 
@@ -89,21 +91,52 @@ namespace SylhShrinkerCartPlus.Utils
 
                     if (levelValuables.veryTall.Exists(v => NameUtils.CleanName(v.name) == itemName))
                     {
-                        shrinkFactor = (ConfigManager.shouldShrinkVeryTall.Value)
+                        data.ShrinkFactor = (ConfigManager.shouldShrinkVeryTall.Value)
                             ? ConfigManager.shrinkFactorVeryTall.Value
                             : initialShrinkFactor;
 
                         break;
                     }
                 }
+
+                data = ApplySpecificShrinkRules(item, data);
             }
 
             return new ShrinkData(
                 item.name,
-                shrinkFactor,
+                data.ShrinkFactor,
                 item.transform.localScale,
-                item.massOriginal
+                item.massOriginal,
+                data.ShrinkFactor
             );
+        }
+
+        private static readonly List<(Func<string, bool> match, Func<float> factor)> SpecificShrinkRules = new()
+        {
+            (name => NameUtils.ContainsIgnoreCase(name, "Treasure Chest"),
+                () => ConfigManager.shouldShrinkMedium.Value ? 0.10f : 0.25f),
+
+            // Ajoute d’autres règles ici
+        };
+
+        public static ShrinkSpecificCaseData ApplySpecificShrinkRules(
+            PhysGrabObject item,
+            ShrinkSpecificCaseData data
+        )
+        {
+            string itemName = NameUtils.CleanName(item.name);
+
+            foreach (var rule in SpecificShrinkRules)
+            {
+                if (rule.match(itemName))
+                {
+                    data.ShrinkFactor = rule.factor();
+                    data.MinScale = data.ShrinkFactor;
+                    return data;
+                }
+            }
+
+            return data;
         }
     }
 }

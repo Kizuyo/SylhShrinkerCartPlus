@@ -6,11 +6,13 @@ namespace SylhShrinkerCartPlus.Config
     public class ConfigManager
     {
         public static ConfigEntry<float> defaultShrinkSpeed;
+        public static ConfigEntry<bool> enableDebugLogs;
         
         public static ConfigEntry<bool> shouldShrinkEnemyOrbs;
         public static ConfigEntry<float> shrinkEnemyOrbSmall;
         public static ConfigEntry<float> shrinkEnemyOrbMedium;
         public static ConfigEntry<float> shrinkEnemyOrbBig;
+        public static ConfigEntry<bool> shouldInstantKillEnemyInCart;
         
         public static ConfigEntry<bool> shouldShrinkTiny;
         public static ConfigEntry<float> shrinkFactorTiny;
@@ -37,6 +39,14 @@ namespace SylhShrinkerCartPlus.Config
         public static ConfigEntry<bool> shouldChangingMass;
         public static ConfigEntry<float> shrinkMassValue;
         
+        public static ConfigEntry<bool> shouldCartWeaponBatteryLifeInfinite;
+        public static ConfigEntry<bool> shouldItemMeleeBatteryLifeInfinite;
+        public static ConfigEntry<bool> shouldItemGunBatteryLifeInfinite;
+        public static ConfigEntry<bool> shouldItemDroneBatteryLifeInfinite;
+        
+        public static ConfigEntry<bool> shouldValuableSafeInsideCart;
+        public static ConfigEntry<bool> shouldValuableStayUnbreakable;
+        
         internal static void Initialize(Plugin plugin)
         {
             defaultShrinkSpeed = plugin.Config.Bind(
@@ -45,6 +55,12 @@ namespace SylhShrinkerCartPlus.Config
                     "The default shrink speed value.", 
                     new AcceptableValueRange<float>(0.60f, 0.99f)
                 )
+            );
+            enableDebugLogs = plugin.Config.Bind(
+                "Debug",
+                "Enable Debug Logs",
+                false,
+                new ConfigDescription("If enabled, debug logs will be printed to the console.")
             );
             
             shouldKeepShrunk = plugin.Config.Bind(
@@ -191,6 +207,49 @@ namespace SylhShrinkerCartPlus.Config
                 new ConfigDescription(
                     "The shrink factor for all VeryTall valuable (if shouldShrinkVeryTall is true).", 
                     new AcceptableValueRange<float>(0.2f, 1.0f)
+                )
+            );
+            
+            shouldInstantKillEnemyInCart = plugin.Config.Bind(
+                "Cheat", "Instant Kill Enemy In Cart", false,
+                new ConfigDescription(
+                    "When activated, enemies will be killed instantly if they entering inside a C.A.R.T."
+                )
+            );
+            shouldCartWeaponBatteryLifeInfinite = plugin.Config.Bind(
+                "Cheat", "Infinite Cart Weapon Battery Life", false,
+                new ConfigDescription(
+                    "When activated, the battery becomes infinite for C.A.R.T Canon / Laser"
+                )
+            );
+            shouldItemMeleeBatteryLifeInfinite = plugin.Config.Bind(
+                "Cheat", "Infinite Melee Battery Life", false,
+                new ConfigDescription(
+                    "When activated, the battery becomes infinite for Item Melee"
+                )
+            );
+            shouldItemGunBatteryLifeInfinite = plugin.Config.Bind(
+                "Cheat", "Infinite Gun Battery Life", false,
+                new ConfigDescription(
+                    "When activated, the battery becomes infinite for Item Gun"
+                )
+            );
+            shouldItemDroneBatteryLifeInfinite = plugin.Config.Bind(
+                "Cheat", "Infinite Drone Battery Life", false,
+                new ConfigDescription(
+                    "When activated, the battery becomes infinite for Item Drone"
+                )
+            );
+            shouldValuableSafeInsideCart = plugin.Config.Bind(
+                "Cheat", "Valuable Safe Inside C.A.R.T", false,
+                new ConfigDescription(
+                    "When activated, Valuable become safe and unbreakable inside a C.A.R.T."
+                )
+            );
+            shouldValuableStayUnbreakable = plugin.Config.Bind(
+                "Cheat", "Valuable Stay Safe Outside C.A.R.T", false,
+                new ConfigDescription(
+                    "When activated, Valuable stay safe and unbreakable after being inside a C.A.R.T."
                 )
             );
         }

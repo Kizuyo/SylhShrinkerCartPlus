@@ -15,14 +15,14 @@ namespace SylhShrinkerCartPlus.Utils
         {
             if (data.OriginalMass <= 1.0f)
             {
-                // Plugin.Log.LogInfo("[MassShrink] Already smallest mass");
+                LogWrapper.Info($"[MassShrink] {item.name} already at smallest mass, skip.");
                 return;
             };
 
             float expectedMass = ConfigManager.shrinkMassValue.Value;
             
             item.OverrideMass(expectedMass, 9999f);
-            // Plugin.Log.LogInfo($"[MassShrink] {item.name} → mass set to {expectedMass:F2} (factor={data.ShrinkFactor:F2})");
+            LogWrapper.Info($"[MassShrink] {item.name} → mass set to {expectedMass:F2} (factor={data.ShrinkFactor:F2})");
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace SylhShrinkerCartPlus.Utils
             if (Mathf.Abs(item.rb.mass - item.massOriginal) > MASS_EPSILON)
             {
                 item.OverrideMass(item.massOriginal, 9999f);
-                // Plugin.Log.LogInfo($"[MassReset] {item.name} → mass restored to {item.massOriginal:F2}");
+                LogWrapper.Info($"[MassReset] {item.name} → mass restored to {item.massOriginal:F2}");
             }
         }
     }

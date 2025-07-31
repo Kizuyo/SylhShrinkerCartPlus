@@ -6,6 +6,11 @@
         {
             return name.Replace("Valuable ", "").Replace("(Clone)", "").Trim();
         }
+        
+        public static bool ContainsIgnoreCase(string source, string toCheck)
+        {
+            return source?.IndexOf(toCheck, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
 
         public static bool TryParseEnemyValuable(
             string name,

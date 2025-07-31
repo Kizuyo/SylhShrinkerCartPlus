@@ -14,7 +14,7 @@ namespace SylhShrinkerCartPlus
     {
         private const string mod_guid = "sylhaance.SylhShrinkerCartPlus";
         private const string mod_name = "Sylh Shrinker Cart Plus";
-        private const string mod_version = "0.0.8";
+        private const string mod_version = "0.1.0";
 
         private Harmony harmony;
         internal static ManualLogSource Log;
@@ -22,7 +22,7 @@ namespace SylhShrinkerCartPlus
         private void Awake()
         {
             Log = Logger;
-            Log.LogInfo("[Sylh ShrinkerCartPlus] Plugin loaded.");
+            Log.LogInfo("[SylhShrinkerCartPlus] Plugin loaded.");
 
             ConfigManager.Initialize(this);
 
@@ -49,7 +49,7 @@ namespace SylhShrinkerCartPlus
         {
             SceneManager.sceneLoaded += (_, _) =>
             {
-                Plugin.Log.LogInfo("[Sylh ShrinkerCartPlus] New scene loaded — clearing lists.");
+                LogWrapper.Info("[Sylh ShrinkerCartPlus] New scene loaded — clearing lists.");
                 originalScales.Clear();
                 objectsToShrink.Clear();
             };
@@ -72,6 +72,14 @@ namespace SylhShrinkerCartPlus
 
             foreach (var item in items)
             {
+                if (ConfigManager.shouldInstantKillEnemyInCart.Value)
+                {
+                    EnemyExecutionManager.TryMarkForExecution(item);
+                }
+
+                ApplyBatteryLifeOnce(item, state);
+                ApplyUnbreakableLogic(item, state);
+
                 if (item == null || !item.GetComponent<ValuableObject>())
                     continue;
 
@@ -89,10 +97,17 @@ namespace SylhShrinkerCartPlus
                 if (item == null || !state.OriginalScales.ContainsKey(item))
                     continue;
 
-                ShrinkData data = ShrinkUtils.GetShrinkData(item);
-                Vector3 original = state.OriginalScales[item];
-                Vector3 target = Vector3.Max(original * data.ShrinkFactor, Vector3.one * minScale);
+                ShrinkSpecificCaseData shrinkSpecificCaseData = new ShrinkSpecificCaseData(
+                    0.20f, minScale
+                );
 
+                ShrinkData data = ShrinkUtils.GetShrinkData(item, shrinkSpecificCaseData);
+                Vector3 original = state.OriginalScales[item];
+                Vector3 target = Vector3.Max(original * data.ShrinkFactor, Vector3.one * data.MinScale);
+
+                PhysGrabObjectImpactDetector detector = item.GetComponent<PhysGrabObjectImpactDetector>();
+                detector.destroyDisable = true;
+                
                 item.transform.localScale =
                     Vector3.MoveTowards(item.transform.localScale, target, shrinkSpeed * Time.deltaTime);
 
@@ -104,6 +119,7 @@ namespace SylhShrinkerCartPlus
                     }
 
                     completedShrinks.Add(item);
+                    LogWrapper.Info($"[ShrinkQueue] Adding '{item.name}' to shrink list.");
                 }
             }
 
@@ -133,10 +149,29 @@ namespace SylhShrinkerCartPlus
 
                         toRestore.Add(obj);
                     }
+                    
+                    // Gestion des objets incassables à vie ou non
+                    var detector = obj.GetComponent<PhysGrabObjectImpactDetector>();
+                    if (detector != null)
+                    {
+                        if (ConfigManager.shouldValuableStayUnbreakable.Value &&
+                            state.MarkedUnbreakableObjects.Contains(obj))
+                        {
+                            detector.destroyDisable = true;
+                        }
+                        else
+                        {
+                            detector.destroyDisable = false;
+                        }
+                    }
                 }
 
                 foreach (var obj in toRestore)
+                {
                     state.OriginalScales.Remove(obj);
+                    state.ModifiedBatteryLifeObjects.Remove(obj);
+                    
+                }
             }
         }
 
@@ -147,8 +182,16 @@ namespace SylhShrinkerCartPlus
             foreach (var kvp in cartStates)
             {
                 var cart = kvp.Key;
+                var state = kvp.Value;
+
                 if (cart == null || !cart.gameObject || cart.gameObject.scene.name == null)
                 {
+                    // Nettoie les objets marqués
+                    state.OriginalScales.Clear();
+                    state.ObjectsToShrink.Clear();
+                    state.ModifiedBatteryLifeObjects.Clear();
+                    state.MarkedUnbreakableObjects.Clear();
+
                     cartsToRemove.Add(cart);
                 }
             }
@@ -156,7 +199,74 @@ namespace SylhShrinkerCartPlus
             foreach (var cart in cartsToRemove)
             {
                 cartStates.Remove(cart);
-                Plugin.Log.LogInfo($"[Sylh ShrinkerCartPlus] Removed destroyed cart from tracking.");
+                LogWrapper.Info($"[CartCleanup] Removed destroyed cart '{cart?.name}' from tracking.");
+            }
+        }
+        
+        private static void ApplyBatteryLifeOnce(PhysGrabObject item, CartShrinkState state)
+        {
+            if (state.ModifiedBatteryLifeObjects.Contains(item)) return;
+
+            bool modified = false;
+
+            if (ConfigManager.shouldCartWeaponBatteryLifeInfinite.Value &&
+                ItemCartWeaponUtils.TryChangeCartWeaponBatteryLife(item))
+            {
+                modified = true;
+            }
+
+            if (ConfigManager.shouldItemMeleeBatteryLifeInfinite.Value)
+            {
+                ItemBatteryUtils.SetMeleeBatteryLife(item);
+                modified = true;
+            }
+
+            if (ConfigManager.shouldItemGunBatteryLifeInfinite.Value)
+            {
+                ItemBatteryUtils.SetGunBatteryLife(item);
+                modified = true;
+            }
+
+            if (ConfigManager.shouldItemDroneBatteryLifeInfinite.Value)
+            {
+                ItemBatteryUtils.SetDroneBatteryLife(item);
+                modified = true;
+            }
+
+            if (modified)
+            {
+                state.ModifiedBatteryLifeObjects.Add(item);
+                LogWrapper.Info($"[BatteryLife] Applied infinite battery to: {item.name}");
+            }
+        }
+        
+        private static void ApplyUnbreakableLogic(PhysGrabObject item, CartShrinkState state)
+        {
+            if (item == null) return;
+
+            var detector = item.GetComponent<PhysGrabObjectImpactDetector>();
+            if (detector == null) return;
+
+            // Si le config est active, applique le flag dans le cart
+            if (ConfigManager.shouldValuableSafeInsideCart.Value)
+            {
+                detector.destroyDisable = true;
+
+                // Si on doit le rendre permanent
+                if (ConfigManager.shouldValuableStayUnbreakable.Value)
+                {
+                    if (!state.MarkedUnbreakableObjects.Contains(item))
+                    {
+                        state.MarkedUnbreakableObjects.Add(item);
+                        LogWrapper.Info($"[Unbreakable] Marked {item.name} as permanently unbreakable.");
+                    }
+                }
+            }
+
+            // Si jamais il a été marqué pour être permanent, on continue à forcer même après la sortie du cart
+            if (ConfigManager.shouldValuableStayUnbreakable.Value && state.MarkedUnbreakableObjects.Contains(item))
+            {
+                detector.destroyDisable = true;
             }
         }
     }
