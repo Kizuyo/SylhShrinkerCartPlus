@@ -1,14 +1,25 @@
+# Sylh Shrinker Cart Plus 
+*(inspired by the mod ShrinkerCart by Oksamie ^^)*
+
+**A mod for R.E.P.O. that dynamically shrinks objects inside carts.**
+
 ## ⚠️ Disclaimer
 > This mod is provided **as-is** and is currently under development.  
 > It was originally made for a small group of friends, so functionality may not be fully polished.  
 > Some objects might behave unexpectedly or not shrink perfectly depending on their setup.
 
-# Shrinker Cart Plus (inspired by the mod ShrinkerCart by Oksamie ^^)
+## Feedback and Suggestions
+If you have any feedback or suggestions, feel free to open an issue on the [GitHub](https://github.com/Voydahn/SylhShrinkerCartPlus.git) repository.
 
-**A mod for R.E.P.O. that dynamically shrinks objects inside carts.**
+## Mod dependancies : 
+BepInExPack v5.4.2100 (https://thunderstore.io/c/repo/p/BepInEx/BepInExPack/)
+
+## Mod Config !:
+Make sure to use the 'REPOConfig (by nickklmao)' mod so you can tweak the mod’s settings directly in-game!
+
+REPOConfig (https://thunderstore.io/c/repo/p/nickklmao/REPOConfig/)
 
 ## 💡 Key Features
-
 - ✅ **Smooth scaling**: no instant size changes – everything shrinks gently.
 - ✅ **Safe limits**: avoids making large objects too small.
 - ✅ **Restoration**: once an object leaves the cart, it gradually returns to its original size.
