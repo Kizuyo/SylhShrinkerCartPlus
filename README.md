@@ -3,7 +3,7 @@
 > It was originally made for a small group of friends, so functionality may not be fully polished.  
 > Some objects might behave unexpectedly or not shrink perfectly depending on their setup.
 
-# Sylh Shrinker Cart Plus
+# Shrinker Cart Plus (inspired by the mod ShrinkerCart by Oksamie ^^)
 
 **A mod for R.E.P.O. that dynamically shrinks objects inside carts.**
 
@@ -13,12 +13,27 @@
 - ✅ **Safe limits**: avoids making large objects too small.
 - ✅ **Restoration**: once an object leaves the cart, it gradually returns to its original size.
 - ✅ **Configuration**: You can change multiple things !
-- ✅ **Only Valuable**: Only valuable will be shrinks, so you can still using C.A.R.T Cannon & Laser
-- ✅ **Also change the mass**: You can activate an option to adjust the mass of shrunk objects inside the cart !
+- ✅ **Only Valuable**: Only valuable will be shrunk, so you can still use C.A.R.T Cannon & Laser.
+- ✅ **Also change the mass**: You can activate an option to adjust the mass of shrunk objects inside the cart!
+- ✅ **Infinite battery**: You can make melee, gun, drone, or cart weapons have infinite battery while in the cart.
+- ✅ **Enemy instakill**: Enemies placed inside a C.A.R.T can be auto-killed (properly, with orb drop!).
+- ✅ **Unbreakable Valuables**: Option to make Valuables invincible inside the cart – and even after, if you want them to stay safe forever.
 
 Enjoy smoother carts and cleaner gameplay. No more massive furniture bouncing out like a possessed fridge. 😉
 
 # ChangeLog
+## v0.1.0
+- 🚀 **Valuable safety options**:
+  - Added `Valuable Safe Inside C.A.R.T`: prevent valuables from being destroyed while inside a cart.
+  - Added `Valuable Stay Safe Outside C.A.R.T`: keep them unbreakable even after being removed.
+- 🚀 **Battery life options**:
+  - Added infinite battery for C.A.R.T weapons, melee, gun, and drone items.
+- 🚀 **Enemy execution**:
+  - Enemies inside a C.A.R.T can now be instantly killed (with proper orb drop).
+- 🧠 **Code refactor**:
+  - Smarter state tracking and cleanup for cart contents.
+  - Centralized shrink logic with better handling of multiple carts.
+
 ## v0.0.10
 - 🚀 Added a config option to adjust the mass of shrunk objects inside the cart
 
