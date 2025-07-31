@@ -12,12 +12,11 @@
 If you have any feedback or suggestions, feel free to open an issue on the [GitHub](https://github.com/Voydahn/SylhShrinkerCartPlus.git) repository.
 
 ## Mod dependancies : 
-BepInExPack v5.4.2100 (https://thunderstore.io/c/repo/p/BepInEx/BepInExPack/)
+[BepInExPack v5.4.2100](https://thunderstore.io/c/repo/p/BepInEx/BepInExPack/)
 
 ## Mod Config !:
-Make sure to use the 'REPOConfig (by nickklmao)' mod so you can tweak the mod’s settings directly in-game!
+Make sure to use the '[REPOConfig](https://thunderstore.io/c/repo/p/nickklmao/REPOConfig/)' mod so you can tweak the mod’s settings directly in-game!
 
-REPOConfig (https://thunderstore.io/c/repo/p/nickklmao/REPOConfig/)
 
 ## 💡 Key Features
 - ✅ **Smooth scaling**: no instant size changes – everything shrinks gently.
@@ -31,6 +30,9 @@ REPOConfig (https://thunderstore.io/c/repo/p/nickklmao/REPOConfig/)
 - ✅ **Unbreakable Valuables**: Option to make Valuables invincible inside the cart – and even after, if you want them to stay safe forever.
 
 Enjoy smoother carts and cleaner gameplay. No more massive furniture bouncing out like a possessed fridge. 😉
+
+## The Wiki !
+Check out the [wiki](https://thunderstore.io/c/repo/p/Sylhaance/SylhShrinkerCartPlus/wiki/) below to dive deeper into it!
 
 # ChangeLog
 ## v0.1.0
