@@ -9,7 +9,8 @@ namespace SylhShrinkerCartPlus.Models
             {
                 { "Small", EnemyValuableCategoryEnum.Small },
                 { "Medium", EnemyValuableCategoryEnum.Medium },
-                { "Big", EnemyValuableCategoryEnum.Big }
+                { "Big", EnemyValuableCategoryEnum.Big },
+                { "Berserker", EnemyValuableCategoryEnum.Berserker }
             };
 
         public ValuableCategoryBase? ResolveCategory(PhysGrabObject item)

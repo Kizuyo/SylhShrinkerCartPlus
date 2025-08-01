@@ -30,6 +30,9 @@ namespace SylhShrinkerCartPlus.Utils
                 case EnemyValuableCategoryEnum.Big:
                     shrinkData.MinShrinkRatio = ConfigManager.shrinkEnemyOrbBig.Value;
                     break;
+                case EnemyValuableCategoryEnum.Berserker:
+                    shrinkData.MinShrinkRatio = ConfigManager.shrinkEnemyOrbBig.Value;
+                    break;
             }
 
             return shrinkData;
@@ -165,7 +168,10 @@ namespace SylhShrinkerCartPlus.Utils
             );
 
             if (category == null)
+            {
+                shrinkData.MinShrinkRatio = 0.4f;
                 return shrinkData;
+            }
 
             shrinkData.Category = category;
 
@@ -182,14 +188,12 @@ namespace SylhShrinkerCartPlus.Utils
             }
 
             shrinkData.Dimensions = GetItemDimensions(item);
-
             if (shrinkData.Dimensions == Vector3.zero)
             {
                 return shrinkData;
             }
 
             shrinkData.ScaleShrinkFactor = GetItemScaleShrinkFactor(shrinkData);
-
             return shrinkData;
         }
     }

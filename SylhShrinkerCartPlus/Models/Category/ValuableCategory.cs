@@ -45,5 +45,6 @@
         Small,
         Medium,
         Big,
+        Berserker,
     }
 }
