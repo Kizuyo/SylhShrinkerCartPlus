@@ -13,6 +13,12 @@ namespace SylhShrinkerCartPlus.Utils
                 Log.LogInfo(message);
         }
 
+        public static void Debug(string message)
+        {
+            if (ConfigManager.enableDebugLogs.Value)
+                Log.LogDebug(message);
+        }
+
         public static void Warning(string message)
         {
             if (ConfigManager.enableDebugLogs.Value)

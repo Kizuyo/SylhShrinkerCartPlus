@@ -8,6 +8,8 @@ namespace SylhShrinkerCartPlus.Models
         public Dictionary<PhysGrabObject, Vector3> OriginalScales = new();
         public HashSet<PhysGrabObject> ModifiedBatteryLifeObjects = new();
         public HashSet<PhysGrabObject> MarkedUnbreakableObjects = new();
+        public HashSet<PhysGrabObject> StickedObjects = new();
+
     }
 }
 

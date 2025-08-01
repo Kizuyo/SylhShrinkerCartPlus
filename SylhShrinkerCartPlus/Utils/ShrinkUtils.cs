@@ -1,4 +1,5 @@
-﻿using SylhShrinkerCartPlus.Config;
+﻿using System.Reflection;
+using SylhShrinkerCartPlus.Config;
 using SylhShrinkerCartPlus.Models;
 using UnityEngine;
 
@@ -8,135 +9,188 @@ namespace SylhShrinkerCartPlus.Utils
     {
         private static float initialShrinkFactor = 1.0f;
 
-        public static ShrinkData GetShrinkData(
-            PhysGrabObject item,
-            ShrinkSpecificCaseData data
+        public static ShrinkData HandleEnemyValuable(
+            EnemyValuableCategory category,
+            ShrinkData shrinkData
         )
         {
-            string itemName = NameUtils.CleanName(item.name);
-
-            if (NameUtils.TryParseEnemyValuable(itemName, out string _, out string enemyType))
+            if (!ConfigManager.shouldShrinkEnemyOrbs.Value)
             {
-                if (ConfigManager.shouldShrinkEnemyOrbs.Value)
-                {
-                    data.ShrinkFactor = enemyType switch
+                return shrinkData;
+            }
+
+            switch (category.Category)
+            {
+                case EnemyValuableCategoryEnum.Small:
+                    shrinkData.MinShrinkRatio = ConfigManager.shrinkEnemyOrbSmall.Value;
+                    break;
+                case EnemyValuableCategoryEnum.Medium:
+                    shrinkData.MinShrinkRatio = ConfigManager.shrinkEnemyOrbMedium.Value;
+                    break;
+                case EnemyValuableCategoryEnum.Big:
+                    shrinkData.MinShrinkRatio = ConfigManager.shrinkEnemyOrbBig.Value;
+                    break;
+            }
+
+            return shrinkData;
+        }
+
+        public static ShrinkData HandleValuable(
+            ValuableCategory category,
+            ShrinkData shrinkData
+        )
+        {
+            switch (category.Category)
+            {
+                case ValuableCategoryEnum.Tiny:
+                    if (!ConfigManager.shouldShrinkTiny.Value)
                     {
-                        "Small" => ConfigManager.shrinkEnemyOrbSmall.Value,
-                        "Medium" => ConfigManager.shrinkEnemyOrbMedium.Value,
-                        "Big" => ConfigManager.shrinkEnemyOrbBig.Value,
-                        _ => 0.50f
-                    };
-                }
-                else
-                {
-                    data.ShrinkFactor = initialShrinkFactor;
-                }
+                        return shrinkData;
+                    }
+
+                    shrinkData.MinShrinkRatio = ConfigManager.shrinkFactorTiny.Value;
+                    break;
+                case ValuableCategoryEnum.Small:
+                    if (!ConfigManager.shouldShrinkSmall.Value)
+                    {
+                        return shrinkData;
+                    }
+
+                    shrinkData.MinShrinkRatio = ConfigManager.shrinkFactorSmall.Value;
+                    break;
+                case ValuableCategoryEnum.Medium:
+                    if (!ConfigManager.shouldShrinkMedium.Value)
+                    {
+                        return shrinkData;
+                    }
+
+                    shrinkData.MinShrinkRatio = ConfigManager.shrinkFactorMedium.Value;
+                    break;
+                case ValuableCategoryEnum.Big:
+                    if (!ConfigManager.shouldShrinkBig.Value)
+                    {
+                        return shrinkData;
+                    }
+
+                    shrinkData.MinShrinkRatio = ConfigManager.shrinkFactorBig.Value;
+                    break;
+                case ValuableCategoryEnum.Wide:
+                    if (!ConfigManager.shouldShrinkWide.Value)
+                    {
+                        return shrinkData;
+                    }
+
+                    shrinkData.MinShrinkRatio = ConfigManager.shrinkFactorWide.Value;
+                    break;
+                case ValuableCategoryEnum.Tall:
+                    if (!ConfigManager.shouldShrinkTall.Value)
+                    {
+                        return shrinkData;
+                    }
+
+                    shrinkData.MinShrinkRatio = ConfigManager.shrinkFactorTall.Value;
+                    break;
+                case ValuableCategoryEnum.VeryTall:
+                    if (!ConfigManager.shouldShrinkVeryTall.Value)
+                    {
+                        return shrinkData;
+                    }
+
+                    shrinkData.MinShrinkRatio = ConfigManager.shrinkFactorVeryTall.Value;
+                    break;
+            }
+
+            return shrinkData;
+        }
+
+        public static Vector3 GetItemDimensions(PhysGrabObject item)
+        {
+            var helper = new FastReflectionHelper<PhysGrabObject>(item);
+            var flags = BindingFlags.Instance | BindingFlags.NonPublic;
+
+            if (
+                !helper.TryGetField("itemWidthX", out float width, flags) ||
+                !helper.TryGetField("itemHeightY", out float height, flags) ||
+                !helper.TryGetField("itemLengthZ", out float length, flags))
+            {
+                return Vector3.zero;
+            }
+
+            return new Vector3(width, height, length);
+        }
+
+        public static float GetItemScaleShrinkFactor(
+            ShrinkData shrinkData
+        )
+        {
+            float min = Mathf.Min(
+                shrinkData.Dimensions.x,
+                shrinkData.Dimensions.y,
+                shrinkData.Dimensions.z
+            );
+
+            float max = Mathf.Max(
+                shrinkData.Dimensions.x,
+                shrinkData.Dimensions.y,
+                shrinkData.Dimensions.z
+            );
+
+            float shrinkFactor;
+
+            float ratio = max / min;
+
+            if (ratio <= 2.5f)
+            {
+                shrinkFactor = shrinkData.MinShrinkRatio / min;
             }
             else
             {
-                foreach (LevelValuables levelValuables in RunManager.instance.levelCurrent.ValuablePresets)
-                {
-                    if (levelValuables.tiny.Exists(v => NameUtils.CleanName(v.name) == itemName))
-                    {
-                        data.ShrinkFactor = (ConfigManager.shouldShrinkTiny.Value)
-                            ? ConfigManager.shrinkFactorTiny.Value
-                            : initialShrinkFactor;
-
-                        break;
-                    }
-
-                    if (levelValuables.small.Exists(v => NameUtils.CleanName(v.name) == itemName))
-                    {
-                        data.ShrinkFactor = (ConfigManager.shouldShrinkSmall.Value)
-                            ? ConfigManager.shrinkFactorSmall.Value
-                            : initialShrinkFactor;
-
-                        break;
-                    }
-
-                    if (levelValuables.medium.Exists(v => NameUtils.CleanName(v.name) == itemName))
-                    {
-                        data.ShrinkFactor = (ConfigManager.shouldShrinkMedium.Value)
-                            ? ConfigManager.shrinkFactorMedium.Value
-                            : initialShrinkFactor;
-                        break;
-                    }
-
-                    if (levelValuables.big.Exists(v => NameUtils.CleanName(v.name) == itemName))
-                    {
-                        data.ShrinkFactor = (ConfigManager.shouldShrinkBig.Value)
-                            ? ConfigManager.shrinkFactorBig.Value
-                            : initialShrinkFactor;
-
-                        break;
-                    }
-
-                    if (levelValuables.wide.Exists(v => NameUtils.CleanName(v.name) == itemName))
-                    {
-                        data.ShrinkFactor = (ConfigManager.shouldShrinkWide.Value)
-                            ? ConfigManager.shrinkFactorWide.Value
-                            : initialShrinkFactor;
-
-                        break;
-                    }
-
-                    if (levelValuables.tall.Exists(v => NameUtils.CleanName(v.name) == itemName))
-                    {
-                        data.ShrinkFactor = (ConfigManager.shouldShrinkTall.Value)
-                            ? ConfigManager.shrinkFactorTall.Value
-                            : initialShrinkFactor;
-
-                        break;
-                    }
-
-                    if (levelValuables.veryTall.Exists(v => NameUtils.CleanName(v.name) == itemName))
-                    {
-                        data.ShrinkFactor = (ConfigManager.shouldShrinkVeryTall.Value)
-                            ? ConfigManager.shrinkFactorVeryTall.Value
-                            : initialShrinkFactor;
-
-                        break;
-                    }
-                }
-
-                data = ApplySpecificShrinkRules(item, data);
+                shrinkFactor = shrinkData.MinShrinkRatio / max;
             }
 
-            return new ShrinkData(
-                item.name,
-                data.ShrinkFactor,
-                item.transform.localScale,
-                item.massOriginal,
-                data.ShrinkFactor
-            );
+            return Mathf.Clamp(shrinkFactor, shrinkData.MinShrinkRatio, 1.0f);
         }
 
-        private static readonly List<(Func<string, bool> match, Func<float> factor)> SpecificShrinkRules = new()
-        {
-            (name => NameUtils.ContainsIgnoreCase(name, "Treasure Chest"),
-                () => ConfigManager.shouldShrinkMedium.Value ? 0.10f : 0.25f),
-
-            // Ajoute d’autres règles ici
-        };
-
-        public static ShrinkSpecificCaseData ApplySpecificShrinkRules(
-            PhysGrabObject item,
-            ShrinkSpecificCaseData data
+        public static ShrinkData GetShrinkData(
+            PhysGrabObject item
         )
         {
             string itemName = NameUtils.CleanName(item.name);
 
-            foreach (var rule in SpecificShrinkRules)
+            var category = CategoryResolverRegistry.Resolve(item);
+            ShrinkData shrinkData = new ShrinkData(
+                itemName,
+                item.transform.localScale,
+                item.massOriginal
+            );
+
+            if (category == null)
+                return shrinkData;
+
+            shrinkData.Category = category;
+
+            switch (category)
             {
-                if (rule.match(itemName))
-                {
-                    data.ShrinkFactor = rule.factor();
-                    data.MinScale = data.ShrinkFactor;
-                    return data;
-                }
+                case EnemyValuableCategory enemy:
+                    shrinkData = HandleEnemyValuable(enemy, shrinkData);
+
+                    break;
+
+                case ValuableCategory valuable:
+                    shrinkData = HandleValuable(valuable, shrinkData);
+                    break;
             }
 
-            return data;
+            shrinkData.Dimensions = GetItemDimensions(item);
+
+            if (shrinkData.Dimensions == Vector3.zero)
+            {
+                return shrinkData;
+            }
+
+            shrinkData.ScaleShrinkFactor = GetItemScaleShrinkFactor(shrinkData);
+
+            return shrinkData;
         }
     }
 }

@@ -22,7 +22,7 @@ namespace SylhShrinkerCartPlus.Utils
             float expectedMass = ConfigManager.shrinkMassValue.Value;
             
             item.OverrideMass(expectedMass, 9999f);
-            LogWrapper.Info($"[MassShrink] {item.name} → mass set to {expectedMass:F2} (factor={data.ShrinkFactor:F2})");
+            LogWrapper.Info($"[MassShrink] {item.name} → mass set to {expectedMass:F2} (factor={data.ScaleShrinkFactor:F2})");
         }
 
         /// <summary>

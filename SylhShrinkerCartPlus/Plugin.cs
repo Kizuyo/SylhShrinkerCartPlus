@@ -1,6 +1,8 @@
-﻿using BepInEx;
+﻿using System.Reflection;
+using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
+using SylhShrinkerCartPlus.Components;
 using UnityEngine;
 using SylhShrinkerCartPlus.Config;
 using SylhShrinkerCartPlus.Models;
@@ -14,7 +16,7 @@ namespace SylhShrinkerCartPlus
     {
         private const string mod_guid = "sylhaance.SylhShrinkerCartPlus";
         private const string mod_name = "Sylh Shrinker Cart Plus";
-        private const string mod_version = "0.1.0";
+        private const string mod_version = "0.2.0";
 
         private Harmony harmony;
         internal static ManualLogSource Log;
@@ -25,6 +27,9 @@ namespace SylhShrinkerCartPlus
             Log.LogInfo("[SylhShrinkerCartPlus] Plugin loaded.");
 
             ConfigManager.Initialize(this);
+            
+            CategoryResolverRegistry.Register(new EnemyCategoryResolver());
+            CategoryResolverRegistry.Register(new StandardValuableCategoryResolver());
 
             harmony = new Harmony(mod_guid);
             harmony.PatchAll();
@@ -34,8 +39,8 @@ namespace SylhShrinkerCartPlus
     [HarmonyPatch(typeof(PhysGrabCart), "ObjectsInCart")]
     public static class ShrinkerCartPatch
     {
-        private static readonly AccessTools.FieldRef<PhysGrabCart, List<PhysGrabObject>> itemsInCartRef =
-            AccessTools.FieldRefAccess<PhysGrabCart, List<PhysGrabObject>>("itemsInCart");
+        // private static readonly AccessTools.FieldRef<PhysGrabCart, List<PhysGrabObject>> itemsInCartRef =
+        // AccessTools.FieldRefAccess<PhysGrabCart, List<PhysGrabObject>>("itemsInCart");
 
         private static readonly HashSet<PhysGrabObject> objectsToShrink = new();
 
@@ -65,10 +70,12 @@ namespace SylhShrinkerCartPlus
                 cartStates[__instance] = state;
             }
 
-            var items = itemsInCartRef(__instance);
-            if (items == null) return;
+            var cartHelper = new FastReflectionHelper<PhysGrabCart>(__instance);
+            if (!cartHelper.TryGetField("itemsInCart", out List<PhysGrabObject> items) || items == null)
+                return;
 
             state.ObjectsToShrink.RemoveWhere(obj => obj == null || !items.Contains(obj));
+
 
             foreach (var item in items)
             {
@@ -83,10 +90,23 @@ namespace SylhShrinkerCartPlus
                 if (item == null || !item.GetComponent<ValuableObject>())
                     continue;
 
+                if (!ShrinkOperationManager.TryAssign(item, __instance))
+                {
+                    LogWrapper.Warning($"[ShrinkControl] Object {item.name} is already being scaled by another cart.");
+                    continue;
+                }
+
                 if (!state.OriginalScales.ContainsKey(item))
                 {
-                    state.OriginalScales[item] = item.transform.localScale;
+                    var tracker = item.GetComponent<OriginalScaleTracker>() ??
+                                  item.gameObject.AddComponent<OriginalScaleTracker>();
+                    tracker.InitializeIfNeeded();
+
+                    state.OriginalScales[item] = tracker.InitialScale;
                     state.ObjectsToShrink.Add(item);
+
+                    LogWrapper.Debug(
+                        $"[ShrinkControl] Registered original scale for {item.name}: {tracker.InitialScale}");
                 }
             }
 
@@ -97,17 +117,15 @@ namespace SylhShrinkerCartPlus
                 if (item == null || !state.OriginalScales.ContainsKey(item))
                     continue;
 
-                ShrinkSpecificCaseData shrinkSpecificCaseData = new ShrinkSpecificCaseData(
-                    0.20f, minScale
-                );
-
-                ShrinkData data = ShrinkUtils.GetShrinkData(item, shrinkSpecificCaseData);
+                ShrinkData data = ShrinkUtils.GetShrinkData(item);
                 Vector3 original = state.OriginalScales[item];
-                Vector3 target = Vector3.Max(original * data.ShrinkFactor, Vector3.one * data.MinScale);
 
+                Vector3 target = Vector3.Max(original * data.ScaleShrinkFactor, original * data.MinShrinkRatio);
+                target = Vector3.Min(target, original);
+                
                 PhysGrabObjectImpactDetector detector = item.GetComponent<PhysGrabObjectImpactDetector>();
                 detector.destroyDisable = true;
-                
+
                 item.transform.localScale =
                     Vector3.MoveTowards(item.transform.localScale, target, shrinkSpeed * Time.deltaTime);
 
@@ -119,12 +137,16 @@ namespace SylhShrinkerCartPlus
                     }
 
                     completedShrinks.Add(item);
+                    LogWrapper.Warning($"Shrink {item.name} → original: {original}, target: {target}, final scale ratio: {target.x / original.x:0.00}, dimensions: {data.Dimensions}");
                     LogWrapper.Info($"[ShrinkQueue] Adding '{item.name}' to shrink list.");
                 }
             }
 
             foreach (var item in completedShrinks)
+            {
                 state.ObjectsToShrink.Remove(item);
+                ShrinkOperationManager.Release(item);
+            }
 
             // Restore logic
             if (!ConfigManager.shouldKeepShrunk.Value)
@@ -149,7 +171,7 @@ namespace SylhShrinkerCartPlus
 
                         toRestore.Add(obj);
                     }
-                    
+
                     // Gestion des objets incassables à vie ou non
                     var detector = obj.GetComponent<PhysGrabObjectImpactDetector>();
                     if (detector != null)
@@ -170,7 +192,7 @@ namespace SylhShrinkerCartPlus
                 {
                     state.OriginalScales.Remove(obj);
                     state.ModifiedBatteryLifeObjects.Remove(obj);
-                    
+                    ShrinkOperationManager.Release(obj);
                 }
             }
         }
@@ -186,7 +208,6 @@ namespace SylhShrinkerCartPlus
 
                 if (cart == null || !cart.gameObject || cart.gameObject.scene.name == null)
                 {
-                    // Nettoie les objets marqués
                     state.OriginalScales.Clear();
                     state.ObjectsToShrink.Clear();
                     state.ModifiedBatteryLifeObjects.Clear();
@@ -200,9 +221,11 @@ namespace SylhShrinkerCartPlus
             {
                 cartStates.Remove(cart);
                 LogWrapper.Info($"[CartCleanup] Removed destroyed cart '{cart?.name}' from tracking.");
+
+                ShrinkOperationManager.ClearCart(cart);
             }
         }
-        
+
         private static void ApplyBatteryLifeOnce(PhysGrabObject item, CartShrinkState state)
         {
             if (state.ModifiedBatteryLifeObjects.Contains(item)) return;
@@ -239,7 +262,7 @@ namespace SylhShrinkerCartPlus
                 LogWrapper.Info($"[BatteryLife] Applied infinite battery to: {item.name}");
             }
         }
-        
+
         private static void ApplyUnbreakableLogic(PhysGrabObject item, CartShrinkState state)
         {
             if (item == null) return;

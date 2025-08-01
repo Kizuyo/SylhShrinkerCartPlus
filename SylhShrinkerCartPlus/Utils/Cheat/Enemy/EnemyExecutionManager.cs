@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reflection;
-using SylhShrinkerCartPlus.Config;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -21,70 +19,143 @@ namespace SylhShrinkerCartPlus.Utils
                 Plugin.Log.LogInfo("[ExecutionManager] Cleared enemiesToKill list on scene load.");
             };
         }
-        
+
+        public static class EnemyReflectionUtils
+        {
+            public static bool TryGetEnemyComponents(
+                PhysGrabObject obj,
+                out object enemy,
+                out object health,
+                out int currentHp,
+                out UnityEvent onDeathEvent)
+            {
+                enemy = null;
+                health = null;
+                currentHp = 0;
+                onDeathEvent = null;
+
+                if (obj == null || !SemiFunc.IsMasterClientOrSingleplayer())
+                {
+                    return false;
+                }
+
+                if (!FastReflection.TryGetField(
+                        typeof(PhysGrabObject),
+                        obj,
+                        "isEnemy",
+                        out bool isEnemy
+                    ) || !isEnemy)
+                {
+                    return false;
+                }
+
+                if (!FastReflection.TryGetField(
+                        typeof(PhysGrabObject),
+                        obj,
+                        "enemyRigidbody",
+                        out object enemyRb
+                    ) || enemyRb == null)
+                {
+                    return false;
+                }
+
+                if (!FastReflection.TryGetField(
+                        enemyRb.GetType(),
+                        enemyRb, "enemy",
+                        out enemy,
+                        BindingFlags.Public | BindingFlags.Instance
+                    ) || enemy == null
+                   )
+                {
+                    return false;
+                }
+
+                if (!FastReflection.TryGetField(
+                        enemy.GetType(),
+                        enemy,
+                        "HasHealth",
+                        out bool hasHealth
+                    ) || !hasHealth)
+                {
+                    return false;
+                }
+
+                if (!FastReflection.TryGetField(
+                        enemy.GetType(),
+                        enemy,
+                        "Health",
+                        out health
+                    ) || health == null)
+                {
+                    return false;
+                }
+
+                if (!FastReflection.TryGetField(
+                        health.GetType(),
+                        health,
+                        "dead",
+                        out bool isDead
+                    ) || isDead)
+                {
+                    return false;
+                }
+
+                if (!FastReflection.TryGetField(
+                        health.GetType(),
+                        health,
+                        "healthCurrent",
+                        out currentHp
+                    ))
+                {
+                    return false;
+                }
+
+                if (!FastReflection.TryGetField(
+                        health.GetType(),
+                        health,
+                        "onDeath",
+                        out onDeathEvent,
+                        BindingFlags.Public | BindingFlags.Instance
+                    ) || onDeathEvent == null)
+                {
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
         public static void TryMarkForExecution(PhysGrabObject obj)
         {
-            if (obj == null || !SemiFunc.IsMasterClientOrSingleplayer())
+
+            if (!EnemyReflectionUtils.TryGetEnemyComponents(obj, out var enemy, out var health, out int hp,
+                    out var onDeathEvent))
+            {
                 return;
+            }
 
-            // Vérifie isEnemy
-            var isEnemyField = typeof(PhysGrabObject).GetField("isEnemy", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (isEnemyField == null || !(bool)isEnemyField.GetValue(obj))
+            if (enemiesToKill.Contains(enemy))
+            {
                 return;
+            }
 
-            // enemyRigidbody
-            var enemyRbField = typeof(PhysGrabObject).GetField("enemyRigidbody", BindingFlags.NonPublic | BindingFlags.Instance);
-            var enemyRb = enemyRbField?.GetValue(obj);
-            if (enemyRb == null) return;
-
-            // enemy
-            var enemyField = enemyRb.GetType().GetField("enemy", BindingFlags.Public | BindingFlags.Instance);
-            var enemy = enemyField?.GetValue(enemyRb);
-            if (enemy == null || enemiesToKill.Contains(enemy))
-                return;
-            
-            LogWrapper.Info($"[ExecutionCheck] Found isEnemy object: '{obj.name}', checking further eligibility...");
-
-            // HasHealth + Health
-            var hasHealthField = enemy.GetType().GetField("HasHealth", BindingFlags.NonPublic | BindingFlags.Instance);
-            var healthField = enemy.GetType().GetField("Health", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (!(bool)(hasHealthField?.GetValue(enemy))) return;
-            var health = healthField?.GetValue(enemy);
-            if (health == null) return;
-
-            // Déjà mort ?
-            var deadField = health.GetType().GetField("dead", BindingFlags.NonPublic | BindingFlags.Instance);
-            if ((bool)(deadField?.GetValue(health))) return;
-
-            // healthCurrent
-            var healthCurrentField = health.GetType().GetField("healthCurrent", BindingFlags.NonPublic | BindingFlags.Instance);
-            int hp = (int)(healthCurrentField?.GetValue(health) ?? 0);
-
-            // Récupère l’event onDeath
-            var onDeathField = health.GetType().GetField("onDeath", BindingFlags.Public | BindingFlags.Instance);
-            if (onDeathField == null) return;
-            var onDeathEvent = onDeathField.GetValue(health) as UnityEvent;
-            if (onDeathEvent == null) return;
-
-            // Ajoute à la liste
             enemiesToKill.Add(enemy);
-            LogWrapper.Info($"[ExecutionManager] Marked enemy for execution: {enemy.GetType().Name}");
 
-            // Abonnement au onDeath
             UnityAction deathHandler = null;
             deathHandler = () =>
             {
-                LogWrapper.Info($"[ExecutionManager] Enemy has died. Removing from kill list.");
                 enemiesToKill.Remove(enemy);
                 onDeathEvent.RemoveListener(deathHandler);
             };
             onDeathEvent.AddListener(deathHandler);
 
-            // Appelle Hurt pour tuer proprement
-            var hurtMethod = health.GetType().GetMethod("Hurt", BindingFlags.Public | BindingFlags.Instance);
-            hurtMethod?.Invoke(health, new object[] { hp + 1, Vector3.up });
+            FastReflection.TryInvokeMethod(
+                health.GetType(),
+                health,
+                "Hurt",
+                new object[] { hp + 1, Vector3.up },
+                BindingFlags.Public | BindingFlags.Instance
+            );
         }
-
-        public static bool IsEnemyMarked(object enemy) => enemiesToKill.Contains(enemy);
     }
 }

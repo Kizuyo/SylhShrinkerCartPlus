@@ -1,4 +1,5 @@
 ﻿using BepInEx.Configuration;
+using SylhShrinkerCartPlus.Models;
 using UnityEngine;
 
 namespace SylhShrinkerCartPlus.Config
@@ -91,24 +92,24 @@ namespace SylhShrinkerCartPlus.Config
                 )
             );
             shrinkEnemyOrbSmall = plugin.Config.Bind(
-                "Enemy", "Shrink Enemy Orb Small", 1.0f,
+                "Enemy", "Shrink Enemy Orb Small", 0.2f,
                 new ConfigDescription(
                     "The shrink factor for small enemy orb valuable (if shouldShrinkEnemyOrbs is true).", 
-                    new AcceptableValueRange<float>(0.90f, 1.0f)
+                    new AcceptableValueRange<float>(0.20f, 1.0f)
                 )
             );
             shrinkEnemyOrbMedium = plugin.Config.Bind(
-                "Enemy", "Shrink Enemy Orb Medium", 0.5f,
+                "Enemy", "Shrink Enemy Orb Medium", 0.20f,
                 new ConfigDescription(
                     "The shrink factor for medium enemy orb valuable (if shouldShrinkEnemyOrbs is true).", 
-                    new AcceptableValueRange<float>(0.50f, 1.0f)
+                    new AcceptableValueRange<float>(0.20f, 1.0f)
                 )
             );
             shrinkEnemyOrbBig = plugin.Config.Bind(
-                "Enemy", "Shrink Enemy Orb Big", 0.3f,
+                "Enemy", "Shrink Enemy Orb Big", 0.20f,
                 new ConfigDescription(
                     "The shrink factor for big enemy orb valuable (if shouldShrinkEnemyOrbs is true).", 
-                    new AcceptableValueRange<float>(0.30f, 1.0f)
+                    new AcceptableValueRange<float>(0.20f, 1.0f)
                 )
             );
             
@@ -119,10 +120,10 @@ namespace SylhShrinkerCartPlus.Config
                 )
             );
             shrinkFactorTiny = plugin.Config.Bind(
-                "Valuable", "Shrink Factor Tiny", 1.0f,
+                "Valuable", "Shrink Factor Tiny", 0.20f,
                 new ConfigDescription(
                     "The shrink factor for all Tiny valuable (if shouldShrinkTiny is true).", 
-                    new AcceptableValueRange<float>(0.90f, 1.0f)
+                    new AcceptableValueRange<float>(0.20f, 1.0f)
                 )
             );
             
@@ -133,10 +134,10 @@ namespace SylhShrinkerCartPlus.Config
                 )
             );
             shrinkFactorSmall = plugin.Config.Bind(
-                "Valuable", "Shrink Factor Small", 1.0f,
+                "Valuable", "Shrink Factor Small", 0.20f,
                 new ConfigDescription(
                     "The shrink factor for all Small valuable (if shouldShrinkSmall is true).", 
-                    new AcceptableValueRange<float>(0.90f, 1.0f)
+                    new AcceptableValueRange<float>(0.20f, 1.0f)
                 )
             );
             
@@ -147,10 +148,10 @@ namespace SylhShrinkerCartPlus.Config
                 )
             );
             shrinkFactorMedium = plugin.Config.Bind(
-                "Valuable", "Shrink Factor Medium", 0.50f,
+                "Valuable", "Shrink Factor Medium", 0.20f,
                 new ConfigDescription(
                     "The shrink factor for all Medium valuable (if shouldShrinkMedium is true).", 
-                    new AcceptableValueRange<float>(0.50f, 1.0f)
+                    new AcceptableValueRange<float>(0.20f, 1.0f)
                 )
             );
             
@@ -161,10 +162,10 @@ namespace SylhShrinkerCartPlus.Config
                 )
             );
             shrinkFactorBig = plugin.Config.Bind(
-                "Valuable", "Shrink Factor Big", 0.3f,
+                "Valuable", "Shrink Factor Big", 0.20f,
                 new ConfigDescription(
                     "The shrink factor for all Big valuable (if shouldShrinkBig is true).", 
-                    new AcceptableValueRange<float>(0.30f, 1.0f)
+                    new AcceptableValueRange<float>(0.20f, 1.0f)
                 )
             );
             
@@ -175,10 +176,10 @@ namespace SylhShrinkerCartPlus.Config
                 )
             );
             shrinkFactorWide = plugin.Config.Bind(
-                "Valuable", "Shrink Factor Wide", 0.25f,
+                "Valuable", "Shrink Factor Wide", 0.20f,
                 new ConfigDescription(
                     "The shrink factor for all Wide valuable (if shouldShrinkWide is true).", 
-                    new AcceptableValueRange<float>(0.25f, 1.0f)
+                    new AcceptableValueRange<float>(0.20f, 1.0f)
                 )
             );
             
@@ -189,10 +190,10 @@ namespace SylhShrinkerCartPlus.Config
                 )
             );
             shrinkFactorTall = plugin.Config.Bind(
-                "Valuable", "Shrink Factor Tall", 0.3f,
+                "Valuable", "Shrink Factor Tall", 0.20f,
                 new ConfigDescription(
                     "The shrink factor for all Tall valuable (if shouldShrinkTall is true).", 
-                    new AcceptableValueRange<float>(0.3f, 1.0f)
+                    new AcceptableValueRange<float>(0.20f, 1.0f)
                 )
             );
             
@@ -203,10 +204,10 @@ namespace SylhShrinkerCartPlus.Config
                 )
             );
             shrinkFactorVeryTall = plugin.Config.Bind(
-                "Valuable", "Shrink Factor VeryTall", 0.2f,
+                "Valuable", "Shrink Factor VeryTall", 0.20f,
                 new ConfigDescription(
                     "The shrink factor for all VeryTall valuable (if shouldShrinkVeryTall is true).", 
-                    new AcceptableValueRange<float>(0.2f, 1.0f)
+                    new AcceptableValueRange<float>(0.20f, 1.0f)
                 )
             );
             
