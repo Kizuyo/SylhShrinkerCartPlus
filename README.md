@@ -35,6 +35,9 @@ Enjoy smoother carts and cleaner gameplay. No more massive furniture bouncing ou
 Check out the [wiki](https://thunderstore.io/c/repo/p/Sylhaance/SylhShrinkerCartPlus/wiki/) below to dive deeper into it!
 
 # ChangeLog
+## v0.4.2
+- I've temporarily removed the unbreakable feature — I might reintroduce it later. I just need more information to make it work properly
+
 ## v0.4.1
 - Fix the issue where objects often break when placed in the CART (sorry about that).
 
