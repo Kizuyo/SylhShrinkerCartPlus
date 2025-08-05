@@ -63,9 +63,9 @@ namespace SylhShrinkerCartPlus.Utils.Shrink
             // Exclusion des types déjà gérés
             if (ItemCartWeaponUtils.TryGetCartWeapon(tracker.GrabObject, out _)) return;
             if (tracker.GetComponent<ItemMelee>() != null || tracker.GetComponent<ItemGun>() != null ||
-                tracker.GetComponent<ItemDrone>() != null)
-                return;
-
+                tracker.GetComponent<ItemDrone>() != null) return;
+            if (tracker.GetComponent<ItemGrenade>()) return;
+            
             if (!tracker.TryGetComponent<ItemBattery>(out var battery)) return;
 
             if (ConfigManager.shouldItemGenericBatteryLifeInfinite.Value)

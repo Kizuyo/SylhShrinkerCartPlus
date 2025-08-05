@@ -24,9 +24,6 @@ namespace SylhShrinkerCartPlus.Utils.Events
 
             ConfigManager.shouldChangingMass.SettingChanged += OnShouldChangingMassSettingChanged;
 
-            ConfigManager.shouldValuableSafeInsideCart.SettingChanged += OnShouldValuableSafeInsideCartSettingChanged;
-            ConfigManager.shouldValuableStayUnbreakable.SettingChanged += OnShouldValuableStayUnbreakableSettingChanged;
-            
             // Ajoute d'autres abonnements ici...
         }
 
@@ -98,60 +95,6 @@ namespace SylhShrinkerCartPlus.Utils.Events
                         tracker.RestoreMass();
                         LogWrapper.Warning($"[Config Refresh] ⚙️ La mass de l'objet {tracker.GrabObject.name} est maintenant de {tracker.InitialMass}");
                     }
-                }
-            }
-        }
-
-        public static void OnShouldValuableSafeInsideCartSettingChanged(object sender, EventArgs e)
-        {
-            RefreshValuablesToBecomeSafeInsideCart();
-        }
-
-        public static void RefreshValuablesToBecomeSafeInsideCart()
-        {
-            LogWrapper.Warning("[Config Refresh] ⚙️ Mise à jour des Items pour qu'ils deviennent safe dans les chariots");
-
-            var trackers = ShrinkTrackerManager.Instance.GetTrackersInCart().ToList();
-            if (!trackers.Any()) return;
-            
-            foreach (var tracker in trackers)
-            {
-                if (ConfigManager.shouldValuableSafeInsideCart.Value)
-                {
-                    tracker.MakeUnbreakable();
-                    LogWrapper.Warning($"[Config Refresh] ⚙️ L'objet {tracker.GrabObject.name} est maintenant incassable dans un chariot");
-                }
-                else
-                {
-                    tracker.MakeBreakable();
-                    LogWrapper.Warning($"[Config Refresh] ⚙️ L'objet {tracker.GrabObject.name} n'est plus incassable dans un chariot");
-                }
-            }
-        }
-
-        public static void OnShouldValuableStayUnbreakableSettingChanged(object sender, EventArgs e)
-        {
-            RefreshValuablesToStaySafeOutsideCart();
-        }
-
-        public static void RefreshValuablesToStaySafeOutsideCart()
-        {
-            LogWrapper.Warning("[Config Refresh] ⚙️ Mise à jour des Items pour qu'ils restent safe en dehors des chariots");
-            
-            var trackers = ShrinkTrackerManager.Instance.GetAll().ToList();
-            if (!trackers.Any()) return;
-            
-            foreach (var tracker in trackers)
-            {
-                if (ConfigManager.shouldValuableStayUnbreakable.Value && ConfigManager.shouldValuableSafeInsideCart.Value)
-                {
-                    tracker.MakeUnbreakable();
-                    LogWrapper.Warning($"[Config Refresh] ⚙️ L'objet {tracker.GrabObject.name} est maintenant incassable");
-                }
-
-                if (!ConfigManager.shouldValuableStayUnbreakable.Value)
-                {
-                    if (!tracker.IsInCart()) tracker.MakeBreakable();
                 }
             }
         }

@@ -14,8 +14,6 @@ using SylhShrinkerCartPlus.Utils.RunManagerUtils;
 using SylhShrinkerCartPlus.Utils.Shrink;
 using SylhShrinkerCartPlus.Utils.Shrink.Config;
 using SylhShrinkerCartPlus.Utils.Shrink.Network;
-using SylhShrinkerCartPlus.Utils.Shrink.Utils.Cheat.Enemy;
-using SylhShrinkerCartPlus.Utils.Shrink.Utils.Events;
 
 namespace SylhShrinkerCartPlus
 {
@@ -53,15 +51,6 @@ namespace SylhShrinkerCartPlus
             ShrinkEvents.OnShrinkCompleted += (tracker) =>
             {
                 LogWrapper.Warning($"🎉 [Event Hook] Fin du rétrécissement pour {tracker.name} !");
-                
-                if (ConfigManager.shouldValuableSafeInsideCart.Value)
-                {
-                    tracker.MakeUnbreakable();
-                }
-                else
-                {
-                    tracker.MakeBreakable();
-                }
             };
 
             ShrinkEvents.OnExpandStarted += (tracker) =>
@@ -86,20 +75,6 @@ namespace SylhShrinkerCartPlus
             ShrinkEvents.OnExitedCart += (tracker) =>
             {
                 LogWrapper.Warning($"📤 [Event Hook] {tracker.name} vient de sortir d’un CART !");
-                
-                if (ConfigManager.shouldValuableSafeInsideCart.Value &&
-                    ConfigManager.shouldValuableStayUnbreakable.Value)
-                {
-                    tracker.Detector.ImpactDisable(1.5f);
-                    tracker.Detector.destroyDisable = true;
-                    return;
-                }
-
-                if (!ConfigManager.shouldValuableStayUnbreakable.Value)
-                {
-                    tracker.Detector.ImpactDisable(1.5f);
-                    tracker.Detector.destroyDisable = false;
-                }
             };
 
             ShrinkEvents.OnMassChanged += (obj, newMass) =>

@@ -17,8 +17,6 @@ namespace SylhShrinkerCartPlus.Components
         public PhysGrabCart CurrentCart { get; set; }
         public PhysGrabCart PreviousCart { get; set; }
 
-        public bool IsUnbreakable { get; set; }
-        
         public bool IsShrunk { get; set; } = false;
         public bool IsShrinking { get; set; } = false;
         public bool IsExpanded { get; set; } = true;
@@ -32,7 +30,6 @@ namespace SylhShrinkerCartPlus.Components
         public int BatteryLife { get; set; } = 0;
         
         public PhysGrabObject GrabObject;
-        public PhysGrabObjectImpactDetector Detector;
         private float _shrinkSpeed;
 
         public void Init(PhysGrabObject owner)
@@ -44,7 +41,6 @@ namespace SylhShrinkerCartPlus.Components
             _shrinkSpeed = ConfigManager.defaultShrinkSpeed.Value;
 
             InitBattery();
-            Detector = GrabObject.GetComponent<PhysGrabObjectImpactDetector>();
         }
         
         public void InitBattery()
@@ -117,16 +113,6 @@ namespace SylhShrinkerCartPlus.Components
             }
         }
         
-        public void MakeUnbreakable()
-        {
-            Detector.destroyDisable = true;
-        }
-        
-        public void MakeBreakable()
-        {
-            Detector.destroyDisable = false;
-        }
-
         public bool IsValuable()
         {
             return GrabObject.GetComponent<ValuableObject>() != null;
@@ -173,9 +159,6 @@ namespace SylhShrinkerCartPlus.Components
             IsExpanded = false;
             IsExpanding = false;
             
-            Detector.ImpactDisable(1.5f);
-            Detector.destroyDisable = true;
-
             ShrinkEvents.RaiseShrinkStarted(this);
         }
 

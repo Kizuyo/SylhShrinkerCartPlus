@@ -47,9 +47,6 @@ namespace SylhShrinkerCartPlus.Utils.Shrink.Config
         public static ConfigEntry<bool> shouldItemDroneBatteryLifeInfinite;
         public static ConfigEntry<bool> shouldItemGenericBatteryLifeInfinite;
 
-        public static ConfigEntry<bool> shouldValuableSafeInsideCart;
-        public static ConfigEntry<bool> shouldValuableStayUnbreakable;
-
         internal static void Initialize(Plugin plugin)
         {
             defaultShrinkSpeed = plugin.Config.Bind(
@@ -255,18 +252,6 @@ namespace SylhShrinkerCartPlus.Utils.Shrink.Config
                 "Cheat", "Infinite Other Item Battery Life", false,
                 new ConfigDescription(
                     "When activated, the battery becomes infinite for other Item "
-                )
-            );
-            shouldValuableSafeInsideCart = plugin.Config.Bind(
-                "Cheat", "Valuable Safe Inside C.A.R.T", false,
-                new ConfigDescription(
-                    "When activated, Valuable become safe and unbreakable inside a C.A.R.T."
-                )
-            );
-            shouldValuableStayUnbreakable = plugin.Config.Bind(
-                "Cheat", "Valuable Stay Safe Outside C.A.R.T", false,
-                new ConfigDescription(
-                    "When activated, Valuable stay safe and unbreakable after being inside a C.A.R.T."
                 )
             );
         }

@@ -2,7 +2,7 @@
 using SylhShrinkerCartPlus.Utils.Shrink.Config;
 using SylhShrinkerCartPlus.Utils.Shrink.Utils.Cheat.Enemy;
 
-namespace SylhShrinkerCartPlus.Utils.Shrink.Utils.Events
+namespace SylhShrinkerCartPlus.Utils.Events
 {
     public class CartEvents
     {
@@ -22,9 +22,6 @@ namespace SylhShrinkerCartPlus.Utils.Shrink.Utils.Events
                 EnemyExecutionManager.TryMarkForExecution(tracker);
             }
             
-            tracker.Detector.ImpactDisable(1.5f);
-            tracker.Detector.destroyDisable = true;
-
             PhysGrabCart currentCart = inCart.cart;
             if (tracker.IsInsideSameCart(currentCart)) return;
             if (tracker.IsInCart()) return;
