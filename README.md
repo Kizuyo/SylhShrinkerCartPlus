@@ -35,6 +35,26 @@ Enjoy smoother carts and cleaner gameplay. No more massive furniture bouncing ou
 Check out the [wiki](https://thunderstore.io/c/repo/p/Sylhaance/SylhShrinkerCartPlus/wiki/) below to dive deeper into it!
 
 # ChangeLog
+## v0.4.1
+- Fix the issue where objects often break when placed in the CART (sorry about that).
+
+## v0.4.0
+- MASSIVE refactor of the mod (YES! Again XD)
+- Improved mod behavior in multiplayer
+- Improved how an object behaves when moving from one cart to another
+- Overall improvement of a bunch of stuff
+
+## v0.3.0
+- Big refactor of the mod
+- Fixed a bug that prevented the Money Bag from shrinking (ups XD)
+- Added a trigger system to reduce the number of lists used in the mod
+- Integrated triggers into some configuration options to improve overall usability
+- Made it possible to remove the "Infinite Battery" effect from items placed in a CART that originally had this option enabled
+
+## v0.2.0
+- Improved the shrink mechanism by basing it on the object's x, y, z dimensions
+- Improved object resizing behavior when transferring from one CART to another
+
 ## v0.1.0
 - 🚀 **Valuable safety options**:
   - Added `Valuable Safe Inside C.A.R.T`: prevent valuables from being destroyed while inside a cart.
@@ -60,6 +80,9 @@ Check out the [wiki](https://thunderstore.io/c/repo/p/Sylhaance/SylhShrinkerCart
 ## v0.0.7
 - 🚀 Added a configuration menu to customize mod settings and fine-tune your experience.
 
+## v0.0.6
+- 🐛 Fixed a bug preventing objects from returning to their original size after being removed from the cart.
+- 🚀 Improved performance by shrinking only new or currently shrinking objects, instead of iterating over the entire cart content every frame.
 ## v0.0.6
 - 🐛 Fixed a bug preventing objects from returning to their original size after being removed from the cart.
 - 🚀 Improved performance by shrinking only new or currently shrinking objects, instead of iterating over the entire cart content every frame.
