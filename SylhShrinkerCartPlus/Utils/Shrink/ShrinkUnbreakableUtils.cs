@@ -7,8 +7,6 @@ namespace SylhShrinkerCartPlus.Utils.Shrink
     {
         public static void ApplyUnbreakableLogic(ShrinkableTracker tracker)
         {
-            if (tracker.GrabObject == null) return;
-
             if (tracker.IsInCart())
             {
                 if (ConfigManager.shouldValuableSafeInsideCart.Value)

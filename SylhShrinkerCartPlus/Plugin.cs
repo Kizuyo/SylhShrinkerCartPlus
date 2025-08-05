@@ -24,7 +24,7 @@ namespace SylhShrinkerCartPlus
     {
         private const string mod_guid = "sylhaance.SylhShrinkerCartPlus";
         private const string mod_name = "Sylh Shrinker Cart Plus";
-        private const string mod_version = "0.4.0";
+        private const string mod_version = "0.4.1";
 
         private Harmony harmony;
         internal static ManualLogSource Log;
@@ -53,7 +53,15 @@ namespace SylhShrinkerCartPlus
             ShrinkEvents.OnShrinkCompleted += (tracker) =>
             {
                 LogWrapper.Warning($"🎉 [Event Hook] Fin du rétrécissement pour {tracker.name} !");
-                ShrinkUnbreakableUtils.ApplyUnbreakableLogic(tracker);
+                
+                if (ConfigManager.shouldValuableSafeInsideCart.Value)
+                {
+                    tracker.MakeUnbreakable();
+                }
+                else
+                {
+                    tracker.MakeBreakable();
+                }
             };
 
             ShrinkEvents.OnExpandStarted += (tracker) =>
@@ -65,28 +73,33 @@ namespace SylhShrinkerCartPlus
             ShrinkEvents.OnExpandCompleted += (tracker) =>
             {
                 LogWrapper.Warning($"🎉 [Event Hook] Fin de l'agrandissement pour {tracker.name} !");
-                ShrinkUnbreakableUtils.ApplyUnbreakableLogic(tracker);
             };
 
             ShrinkEvents.OnEnteredCart += (tracker) =>
             {
                 LogWrapper.Warning($"📥 [Event Hook] {tracker.name} vient d'entrer dans un CART !");
-
-                if (ConfigManager.shouldInstantKillEnemyInCart.Value)
-                {
-                    EnemyExecutionManager.TryMarkForExecution(tracker);
-                }
-
                 NetworkHelper.ProcessingChangingBatteryLife(tracker);
                 
-                ShrinkUnbreakableUtils.ApplyUnbreakableLogic(tracker);
+                // ShrinkUnbreakableUtils.ApplyUnbreakableLogic(tracker);
             };
 
             ShrinkEvents.OnExitedCart += (tracker) =>
             {
                 LogWrapper.Warning($"📤 [Event Hook] {tracker.name} vient de sortir d’un CART !");
+                
+                if (ConfigManager.shouldValuableSafeInsideCart.Value &&
+                    ConfigManager.shouldValuableStayUnbreakable.Value)
+                {
+                    tracker.Detector.ImpactDisable(1.5f);
+                    tracker.Detector.destroyDisable = true;
+                    return;
+                }
 
-                ShrinkUnbreakableUtils.ApplyUnbreakableLogic(tracker);
+                if (!ConfigManager.shouldValuableStayUnbreakable.Value)
+                {
+                    tracker.Detector.ImpactDisable(1.5f);
+                    tracker.Detector.destroyDisable = false;
+                }
             };
 
             ShrinkEvents.OnMassChanged += (obj, newMass) =>
@@ -97,7 +110,6 @@ namespace SylhShrinkerCartPlus
             CartEvents.OnCartObjectAdded += (cart, obj) =>
             {
                 LogWrapper.Warning($"[CartEventBus] 🧲 Objet {obj.name} ajouté dans le cart : {cart.name}");
-
                 CartEvents.RaiseEnterCart(obj, cart);
             };
         }
@@ -177,6 +189,11 @@ namespace SylhShrinkerCartPlus
         {
             try
             {
+                if (!RunManagerHelper.IsInsideValidLevel())
+                {
+                    return;
+                }
+                
                 var tracker = __instance.GetComponent<ShrinkableTracker>();
                 if (tracker == null)
                 {

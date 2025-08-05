@@ -1,24 +1,36 @@
-﻿namespace SylhShrinkerCartPlus.Utils.Shrink.Utils.Events
+﻿using SylhShrinkerCartPlus.Components;
+using SylhShrinkerCartPlus.Utils.Shrink.Config;
+using SylhShrinkerCartPlus.Utils.Shrink.Utils.Cheat.Enemy;
+
+namespace SylhShrinkerCartPlus.Utils.Shrink.Utils.Events
 {
     public class CartEvents
     {
         public static event Action<PhysGrabCart, PhysGrabObject> OnCartObjectAdded;
         public static event Action<PhysGrabObject, PhysGrabCart> OnEnterCart;
-        
-        public static void FireCartObjectAdded(PhysGrabInCart inCart, PhysGrabObject obj)
+
+        public static void FireCartObjectAdded(
+            PhysGrabInCart inCart,
+            PhysGrabObject obj
+        )
         {
-            if (ShrinkerCartPatch.GetTracker(obj).IsInsideSameCart(inCart.cart))
+            ShrinkableTracker tracker = ShrinkerCartPatch.GetTracker(obj);
+            if (tracker == null) return;
+
+            if (ConfigManager.shouldInstantKillEnemyInCart.Value)
             {
-                return;
+                EnemyExecutionManager.TryMarkForExecution(tracker);
             }
             
-            if (ShrinkerCartPatch.GetTracker(obj).IsInCart())
-            {
-                return;
-            }
+            tracker.Detector.ImpactDisable(1.5f);
+            tracker.Detector.destroyDisable = true;
 
-            var cart = inCart.cart;
-            OnCartObjectAdded?.Invoke(cart, obj);
+            PhysGrabCart currentCart = inCart.cart;
+            if (tracker.IsInsideSameCart(currentCart)) return;
+            if (tracker.IsInCart()) return;
+
+            tracker.CurrentCart = currentCart;
+            OnCartObjectAdded?.Invoke(currentCart, obj);
         }
 
         public static void RaiseEnterCart(PhysGrabObject obj, PhysGrabCart cart)
