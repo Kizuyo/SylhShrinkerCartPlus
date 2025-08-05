@@ -1,64 +1,47 @@
-﻿using UnityEngine;
-
-namespace SylhShrinkerCartPlus.Utils
+﻿namespace SylhShrinkerCartPlus.Utils.Cheat.Cart
 {
     public static class ItemBatteryUtils
     {
-        private const int DefaultBatteryLife = 9999;
-
-        private static void TryFallbackBattery(PhysGrabObject obj, int batteryLife)
+        public static ItemBattery? TryGetBattery(PhysGrabObject item, out ItemBattery? battery)
         {
-            if (obj.TryGetComponent<ItemBattery>(out var battery))
+            if (item == null)
             {
-                LogWrapper.Warning($"[FallbackBattery] Using fallback ItemBattery on '{obj.name}' (missing expected component)");
-                SetBatteryLife(battery, batteryLife);
+                battery = null;
+                return battery;
             }
-        }
-        
-        public static void SetBatteryLife(ItemBattery itemBattery, int batteryLife = DefaultBatteryLife)
-        {
-            if (itemBattery == null) return;
 
-            itemBattery.batteryDrainRate = 0f;
-            itemBattery.SetBatteryLife(batteryLife);
-        }
+            if (ItemCartWeaponUtils.TryGetCartWeaponBattery(item, out ItemBattery? canonBattery))
+            {
+                battery = canonBattery;
+                return battery;
+            }
 
-        public static void SetMeleeBatteryLife(PhysGrabObject obj, int batteryLife = DefaultBatteryLife)
-        {
-            if (obj.TryGetComponent<ItemMelee>(out var melee))
+            if (item.TryGetComponent<ItemMelee>(out var melee))
             {
-                melee.durabilityDrainOnEnemiesAndPVP = 0f;
-                SetBatteryLife(melee.GetComponent<ItemBattery>(), batteryLife);
+                battery = melee.GetComponent<ItemBattery>();
+                return battery;
             }
-            else
-            {
-                TryFallbackBattery(obj, batteryLife);
-            }
-        }
 
-        public static void SetGunBatteryLife(PhysGrabObject obj, int batteryLife = DefaultBatteryLife)
-        {
-            if (obj.TryGetComponent<ItemGun>(out var gun))
+            if (item.TryGetComponent<ItemGun>(out var gun))
             {
-                gun.batteryDrain = 0f;
-                SetBatteryLife(gun.GetComponent<ItemBattery>(), batteryLife);
+                battery = gun.GetComponent<ItemBattery>();
+                return battery;
             }
-            else
-            {
-                TryFallbackBattery(obj, batteryLife);
-            }
-        }
 
-        public static void SetDroneBatteryLife(PhysGrabObject obj, int batteryLife = DefaultBatteryLife)
-        {
-            if (obj.TryGetComponent<ItemDrone>(out var drone))
+            if (item.TryGetComponent<ItemDrone>(out var drone))
             {
-                SetBatteryLife(drone.GetComponent<ItemBattery>(), batteryLife);
+                battery = drone.GetComponent<ItemBattery>();
+                return battery;
             }
-            else
+
+            if (item.TryGetComponent<ItemBattery>(out var genericBattery))
             {
-                TryFallbackBattery(obj, batteryLife);
+                battery = genericBattery;
+                return battery;
             }
+
+            battery = null;
+            return battery;
         }
     }
 }

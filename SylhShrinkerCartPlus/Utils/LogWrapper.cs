@@ -1,5 +1,5 @@
 ﻿using BepInEx.Logging;
-using SylhShrinkerCartPlus.Config;
+using SylhShrinkerCartPlus.Utils.Shrink.Config;
 
 namespace SylhShrinkerCartPlus.Utils
 {

@@ -20,6 +20,12 @@
       <Reference Include="BepInEx">
         <HintPath>C:\Users\noelp\AppData\Roaming\Thunderstore Mod Manager\DataFolder\REPO\profiles\Best\BepInEx\core\BepInEx.dll</HintPath>
       </Reference>
+      <Reference Include="PhotonRealtime">
+        <HintPath>F:\Games\Steam\steamapps\common\REPO\REPO_Data\Managed\PhotonRealtime.dll</HintPath>
+      </Reference>
+      <Reference Include="PhotonUnityNetworking">
+        <HintPath>F:\Games\Steam\steamapps\common\REPO\REPO_Data\Managed\PhotonUnityNetworking.dll</HintPath>
+      </Reference>
       <Reference Include="UnityEngine">
         <HintPath>F:\Games\Steam\steamapps\common\REPO\REPO_Data\Managed\UnityEngine.dll</HintPath>
       </Reference>

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using SylhShrinkerCartPlus.Resolver.Valuable;
+using UnityEngine;
 
 namespace SylhShrinkerCartPlus.Models
 {
@@ -9,15 +10,16 @@ namespace SylhShrinkerCartPlus.Models
         
         public string Name { get; set; }
         public Vector3 OriginalScale { get; set; }
+        public Vector3 Target { get; set; }
         public float OriginalMass { get; set; }
         public Vector3 Dimensions { get; set; }
         public float ScaleShrinkFactor { get; set; }
         public ValuableCategoryBase Category { get; set; }
 
         public ShrinkData(
-            string name,
-            Vector3 originalScale,
-            float originalMass,
+            string name = "",
+            Vector3 originalScale = new(),
+            float originalMass = 0f,
             float minShrinkRatio = 1.0f,
             float scaleShrinkFactor = 1.0f
         )
@@ -31,10 +33,13 @@ namespace SylhShrinkerCartPlus.Models
 
         public override string ToString()
         {
-            return $"Shrinking '{Name}' " +
+            return $"'- Name: {Name}' " +
                    $"- Original Scale: {OriginalScale}" +
                    $"- Original Mass: {OriginalMass}" +
-                   $"- Min Shrink Ratio: {MinShrinkRatio}";
+                   $"- Min Shrink Ratio: {MinShrinkRatio}" +
+                   $"- Scale Shrink Factor: {ScaleShrinkFactor}" +
+                   $"- Dimensions: {Dimensions}" +
+                   $"- Category: {Category}";
         }
     }
 }

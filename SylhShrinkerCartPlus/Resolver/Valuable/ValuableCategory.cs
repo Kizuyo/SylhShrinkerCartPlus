@@ -1,4 +1,4 @@
-﻿namespace SylhShrinkerCartPlus.Models
+﻿namespace SylhShrinkerCartPlus.Resolver.Valuable
 {
     public abstract class ValuableCategoryBase
     {
@@ -29,6 +29,18 @@
         public override string DisplayName => Category.ToString();
     }
 
+    public sealed class SpecialValuableCategory : ValuableCategoryBase
+    {
+        public SpecialValuableCategoryEnum Category { get; }
+
+        public SpecialValuableCategory(SpecialValuableCategoryEnum category)
+        {
+            Category = category;
+        }
+
+        public override string DisplayName => Category.ToString();
+    }
+
     public enum ValuableCategoryEnum
     {
         Tiny,
@@ -46,5 +58,10 @@
         Medium,
         Big,
         Berserker,
+    }
+    
+    public enum SpecialValuableCategoryEnum
+    {
+        SurplusValuable,
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace SylhShrinkerCartPlus.Models
+﻿namespace SylhShrinkerCartPlus.Resolver.Valuable
 {
     public interface ICategoryResolver
     {

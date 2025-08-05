@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Reflection;
+using SylhShrinkerCartPlus.Components;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
-namespace SylhShrinkerCartPlus.Utils
+namespace SylhShrinkerCartPlus.Utils.Shrink.Utils.Cheat.Enemy
 {
     public static class EnemyExecutionManager
     {
@@ -23,7 +24,7 @@ namespace SylhShrinkerCartPlus.Utils
         public static class EnemyReflectionUtils
         {
             public static bool TryGetEnemyComponents(
-                PhysGrabObject obj,
+                ShrinkableTracker tracker,
                 out object enemy,
                 out object health,
                 out int currentHp,
@@ -33,6 +34,8 @@ namespace SylhShrinkerCartPlus.Utils
                 health = null;
                 currentHp = 0;
                 onDeathEvent = null;
+
+                PhysGrabObject obj = tracker.GrabObject;
 
                 if (obj == null || !SemiFunc.IsMasterClientOrSingleplayer())
                 {
@@ -125,10 +128,9 @@ namespace SylhShrinkerCartPlus.Utils
             }
         }
 
-        public static void TryMarkForExecution(PhysGrabObject obj)
+        public static void TryMarkForExecution(ShrinkableTracker tracker)
         {
-
-            if (!EnemyReflectionUtils.TryGetEnemyComponents(obj, out var enemy, out var health, out int hp,
+            if (!EnemyReflectionUtils.TryGetEnemyComponents(tracker, out var enemy, out var health, out int hp,
                     out var onDeathEvent))
             {
                 return;

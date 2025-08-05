@@ -1,6 +1,6 @@
 ﻿using SylhShrinkerCartPlus.Utils;
 
-namespace SylhShrinkerCartPlus.Models
+namespace SylhShrinkerCartPlus.Resolver.Valuable
 {
     public class EnemyCategoryResolver : ICategoryResolver
     {

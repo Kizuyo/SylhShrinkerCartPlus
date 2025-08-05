@@ -1,11 +1,13 @@
 ﻿using System.Reflection;
-using SylhShrinkerCartPlus.Config;
+using SylhShrinkerCartPlus.Components;
 using SylhShrinkerCartPlus.Models;
+using SylhShrinkerCartPlus.Resolver.Valuable;
+using SylhShrinkerCartPlus.Utils.Shrink.Config;
 using UnityEngine;
 
-namespace SylhShrinkerCartPlus.Utils
+namespace SylhShrinkerCartPlus.Utils.Shrink
 {
-    public class ShrinkUtils
+    public static class ShrinkUtils
     {
         private static float initialShrinkFactor = 1.0f;
 
@@ -32,6 +34,21 @@ namespace SylhShrinkerCartPlus.Utils
                     break;
                 case EnemyValuableCategoryEnum.Berserker:
                     shrinkData.MinShrinkRatio = ConfigManager.shrinkEnemyOrbBig.Value;
+                    break;
+            }
+
+            return shrinkData;
+        }
+
+        public static ShrinkData HandleSpecialValuable(
+            SpecialValuableCategory category,
+            ShrinkData shrinkData
+        )
+        {
+            switch (category.Category)
+            {
+                case SpecialValuableCategoryEnum.SurplusValuable:
+                    shrinkData.MinShrinkRatio = 0.2f;
                     break;
             }
 
@@ -161,38 +178,43 @@ namespace SylhShrinkerCartPlus.Utils
             string itemName = NameUtils.CleanName(item.name);
 
             var category = CategoryResolverRegistry.Resolve(item);
+
+            ShrinkableTracker? tracker = item.GetComponent<ShrinkableTracker>();
             ShrinkData shrinkData = new ShrinkData(
                 itemName,
-                item.transform.localScale,
+                tracker ? tracker.InitialScale : item.transform.localScale,
                 item.massOriginal
             );
+            shrinkData.Dimensions = GetItemDimensions(item);
 
             if (category == null)
             {
-                shrinkData.MinShrinkRatio = 0.4f;
-                return shrinkData;
+                shrinkData.MinShrinkRatio = ConfigManager.fallbackShrinkFactor.Value;
             }
-
-            shrinkData.Category = category;
-
-            switch (category)
+            else
             {
-                case EnemyValuableCategory enemy:
-                    shrinkData = HandleEnemyValuable(enemy, shrinkData);
+                shrinkData.Category = category;
 
-                    break;
+                switch (category)
+                {
+                    case EnemyValuableCategory enemy:
+                        shrinkData = HandleEnemyValuable(enemy, shrinkData);
+                        break;
 
-                case ValuableCategory valuable:
-                    shrinkData = HandleValuable(valuable, shrinkData);
-                    break;
+                    case ValuableCategory valuable:
+                        shrinkData = HandleValuable(valuable, shrinkData);
+                        break;
+
+                    case SpecialValuableCategory valuable:
+                        shrinkData = HandleSpecialValuable(valuable, shrinkData);
+                        break;
+                    
+                    default:
+                        shrinkData.MinShrinkRatio = ConfigManager.fallbackShrinkFactor.Value;
+                        break;
+                }
             }
-
-            shrinkData.Dimensions = GetItemDimensions(item);
-            if (shrinkData.Dimensions == Vector3.zero)
-            {
-                return shrinkData;
-            }
-
+            
             shrinkData.ScaleShrinkFactor = GetItemScaleShrinkFactor(shrinkData);
             return shrinkData;
         }

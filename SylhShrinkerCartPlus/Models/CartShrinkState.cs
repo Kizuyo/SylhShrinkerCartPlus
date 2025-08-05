@@ -1,15 +1,10 @@
 ﻿using UnityEngine;
 
-namespace SylhShrinkerCartPlus.Models
+namespace SylhShrinkerCartPlus.Utils.Shrink.Resolver.Valuable
 {
     public class CartShrinkState
     {
-        public HashSet<PhysGrabObject> ObjectsToShrink = new();
-        public Dictionary<PhysGrabObject, Vector3> OriginalScales = new();
-        public HashSet<PhysGrabObject> ModifiedBatteryLifeObjects = new();
-        public HashSet<PhysGrabObject> MarkedUnbreakableObjects = new();
-        public HashSet<PhysGrabObject> StickedObjects = new();
-
+        
     }
 }
 

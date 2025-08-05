@@ -1,13 +1,21 @@
-﻿using System.Reflection;
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
-using SylhShrinkerCartPlus.Components;
+using Photon.Pun;
 using UnityEngine;
-using SylhShrinkerCartPlus.Config;
-using SylhShrinkerCartPlus.Models;
-using SylhShrinkerCartPlus.Utils;
 using UnityEngine.SceneManagement;
+using SylhShrinkerCartPlus.Components;
+using SylhShrinkerCartPlus.Manager;
+using SylhShrinkerCartPlus.Models;
+using SylhShrinkerCartPlus.Resolver.Valuable;
+using SylhShrinkerCartPlus.Utils;
+using SylhShrinkerCartPlus.Utils.Events;
+using SylhShrinkerCartPlus.Utils.RunManagerUtils;
+using SylhShrinkerCartPlus.Utils.Shrink;
+using SylhShrinkerCartPlus.Utils.Shrink.Config;
+using SylhShrinkerCartPlus.Utils.Shrink.Network;
+using SylhShrinkerCartPlus.Utils.Shrink.Utils.Cheat.Enemy;
+using SylhShrinkerCartPlus.Utils.Shrink.Utils.Events;
 
 namespace SylhShrinkerCartPlus
 {
@@ -16,7 +24,7 @@ namespace SylhShrinkerCartPlus
     {
         private const string mod_guid = "sylhaance.SylhShrinkerCartPlus";
         private const string mod_name = "Sylh Shrinker Cart Plus";
-        private const string mod_version = "0.2.0";
+        private const string mod_version = "0.4.0";
 
         private Harmony harmony;
         internal static ManualLogSource Log;
@@ -27,270 +35,277 @@ namespace SylhShrinkerCartPlus
             Log.LogInfo("[SylhShrinkerCartPlus] Plugin loaded.");
 
             ConfigManager.Initialize(this);
-            
+            ConfigEvents.Initialize();
+
             CategoryResolverRegistry.Register(new EnemyCategoryResolver());
             CategoryResolverRegistry.Register(new StandardValuableCategoryResolver());
+            CategoryResolverRegistry.Register(new SpecialCategoryResolver());
 
             harmony = new Harmony(mod_guid);
             harmony.PatchAll();
+
+            ShrinkEvents.OnShrinkStarted += (tracker) =>
+            {
+                LogWrapper.Warning($"⏳ [Event Hook] Début du rétrécissement pour {tracker.name} !");
+                NetworkHelper.ProcessingChangingMass(tracker);
+            };
+
+            ShrinkEvents.OnShrinkCompleted += (tracker) =>
+            {
+                LogWrapper.Warning($"🎉 [Event Hook] Fin du rétrécissement pour {tracker.name} !");
+                ShrinkUnbreakableUtils.ApplyUnbreakableLogic(tracker);
+            };
+
+            ShrinkEvents.OnExpandStarted += (tracker) =>
+            {
+                LogWrapper.Warning($"⏳ [Event Hook] Début de l'agrandissement pour {tracker.name} !");
+                NetworkHelper.ProcessingRestoringMass(tracker);
+            };
+
+            ShrinkEvents.OnExpandCompleted += (tracker) =>
+            {
+                LogWrapper.Warning($"🎉 [Event Hook] Fin de l'agrandissement pour {tracker.name} !");
+                ShrinkUnbreakableUtils.ApplyUnbreakableLogic(tracker);
+            };
+
+            ShrinkEvents.OnEnteredCart += (tracker) =>
+            {
+                LogWrapper.Warning($"📥 [Event Hook] {tracker.name} vient d'entrer dans un CART !");
+
+                if (ConfigManager.shouldInstantKillEnemyInCart.Value)
+                {
+                    EnemyExecutionManager.TryMarkForExecution(tracker);
+                }
+
+                NetworkHelper.ProcessingChangingBatteryLife(tracker);
+                
+                ShrinkUnbreakableUtils.ApplyUnbreakableLogic(tracker);
+            };
+
+            ShrinkEvents.OnExitedCart += (tracker) =>
+            {
+                LogWrapper.Warning($"📤 [Event Hook] {tracker.name} vient de sortir d’un CART !");
+
+                ShrinkUnbreakableUtils.ApplyUnbreakableLogic(tracker);
+            };
+
+            ShrinkEvents.OnMassChanged += (obj, newMass) =>
+            {
+                LogWrapper.Warning($"⚖️ [Event Hook] {obj.name} → masse changée à {newMass:F2}");
+            };
+
+            CartEvents.OnCartObjectAdded += (cart, obj) =>
+            {
+                LogWrapper.Warning($"[CartEventBus] 🧲 Objet {obj.name} ajouté dans le cart : {cart.name}");
+
+                CartEvents.RaiseEnterCart(obj, cart);
+            };
+        }
+    }
+
+    [HarmonyPatch(typeof(PhysGrabInCart), nameof(PhysGrabInCart.Add))]
+    public static class PhysGrabInCartAddPatch
+    {
+        static void Postfix(PhysGrabInCart __instance, PhysGrabObject _physGrabObject)
+        {
+            if (!RunManagerHelper.IsInsideValidLevel())
+            {
+                return;
+            }
+
+            CartEvents.FireCartObjectAdded(__instance, _physGrabObject);
+        }
+    }
+
+    [HarmonyPatch(typeof(PhysGrabObjectImpactDetector), "Start")]
+    public static class Patch_PhysGrabObjectImpactDetector_Start
+    {
+        static void Postfix(PhysGrabObjectImpactDetector __instance)
+        {
+            if (!RunManagerHelper.IsInsideValidLevel())
+            {
+                return;
+            }
+            
+            __instance.onDestroy.AddListener(() =>
+            {
+                var physGrabObject = __instance.GetComponentInChildren<PhysGrabObject>();
+                if (physGrabObject == null)
+                {
+                    Debug.LogWarning("[ShrinkerPlus] Aucun PhysGrabObject trouvé pour destruction.");
+                    return;
+                }
+                
+                ShrinkableTracker tracker = __instance.gameObject.GetComponent<ShrinkableTracker>();
+                if (tracker == null) return;
+                
+                string cartName = tracker.CurrentCart.name;
+
+                ShrinkTrackerManager.Instance.UnregisterShrinkCompletion(tracker.CurrentCart, tracker.GrabObject);
+                ShrinkTrackerManager.Instance.Unregister(tracker);
+                
+                Debug.Log($"[ShrinkerPlus] 🧹 '{physGrabObject.name}' supprimé des listes de '{cartName}'.");
+            });
+        }
+    }
+
+    [HarmonyPatch(typeof(PhysGrabObject), "DestroyPhysGrabObjectRPC")]
+    public static class DestroyPhysGrabObjectRPCPatch
+    {
+        public static void Prefix(PhysGrabObject __instance)
+        {
+            if (!RunManagerHelper.IsInsideValidLevel())
+            {
+                return;
+            }
+            
+            ShrinkableTracker tracker = __instance.gameObject.GetComponent<ShrinkableTracker>();
+            
+            ShrinkTrackerManager.Instance.UnregisterShrinkCompletion(tracker.CurrentCart, tracker.GrabObject);
+            ShrinkTrackerManager.Instance.Unregister(tracker);
+            
+            LogWrapper.Warning(
+                $"L'objet {__instance.name} vient de subir une destruction par le biais d'un autre méthode que subir des dégâts");
+        }
+    }
+
+    [HarmonyPatch(typeof(PhysGrabObject), "Start")]
+    public static class PhysGrabObjectAwakePatch
+    {
+        [HarmonyPostfix]
+        public static void PostFix(PhysGrabObject __instance)
+        {
+            try
+            {
+                var tracker = __instance.GetComponent<ShrinkableTracker>();
+                if (tracker == null)
+                {
+                    tracker = __instance.gameObject.AddComponent<ShrinkableTracker>();
+                    tracker.Init(__instance);
+                }
+                
+                // ✅ Ajout du PhotonView si manquant
+                if (__instance.GetComponent<PhotonView>() == null)
+                {
+                    var pv = __instance.gameObject.AddComponent<PhotonView>();
+                    pv.ViewID = 0; // Laisse Photon s'en charger si tu n’as pas de gestion manuelle
+                    LogWrapper.Warning($"[StartPatch] 🛰️ PhotonView ajouté à {__instance.name}");
+                }
+
+                // ✅ Ajout du dispatcher réseau si manquant
+                if (__instance.GetComponent<ShrinkNetworkDispatcher>() == null)
+                {
+                    __instance.gameObject.AddComponent<ShrinkNetworkDispatcher>();
+                    LogWrapper.Warning($"[StartPatch] 🔌 Dispatcher réseau ajouté à {__instance.name}");
+                }
+
+                LogWrapper.Warning($"[StartPatch] ✅ Tracker ajouté à {__instance.name}");
+            }
+            catch (Exception ex)
+            {
+                LogWrapper.Error($"[StartPatch] ❌ Erreur pendant le patch Start : {ex}");
+            }
         }
     }
 
     [HarmonyPatch(typeof(PhysGrabCart), "ObjectsInCart")]
     public static class ShrinkerCartPatch
     {
-        // private static readonly AccessTools.FieldRef<PhysGrabCart, List<PhysGrabObject>> itemsInCartRef =
-        // AccessTools.FieldRefAccess<PhysGrabCart, List<PhysGrabObject>>("itemsInCart");
-
-        private static readonly HashSet<PhysGrabObject> objectsToShrink = new();
-
-        private static readonly Dictionary<PhysGrabCart, CartShrinkState> cartStates = new();
-
-        private static readonly Dictionary<PhysGrabObject, Vector3> originalScales = new();
-        private static float shrinkSpeed = ConfigManager.defaultShrinkSpeed.Value;
-        private static float minScale = 0.20f;
-
         static ShrinkerCartPatch()
         {
             SceneManager.sceneLoaded += (_, _) =>
             {
                 LogWrapper.Info("[Sylh ShrinkerCartPlus] New scene loaded — clearing lists.");
-                originalScales.Clear();
-                objectsToShrink.Clear();
+                ShrinkTrackerManager.Instance.ClearAll();
             };
         }
 
         public static void Postfix(PhysGrabCart __instance)
         {
-            CleanupCartStates();
-
-            if (!cartStates.TryGetValue(__instance, out var state))
+            if (!RunManagerHelper.IsInsideValidLevel())
             {
-                state = new CartShrinkState();
-                cartStates[__instance] = state;
+                return;
             }
 
             var cartHelper = new FastReflectionHelper<PhysGrabCart>(__instance);
             if (!cartHelper.TryGetField("itemsInCart", out List<PhysGrabObject> items) || items == null)
                 return;
 
-            state.ObjectsToShrink.RemoveWhere(obj => obj == null || !items.Contains(obj));
+            var newItems = new HashSet<PhysGrabObject>(items);
+            var oldItems = new HashSet<PhysGrabObject>(
+                ShrinkTrackerManager.Instance.GetCompletedShrunkObjects(__instance)
+                );
 
-
-            foreach (var item in items)
+            foreach (var entered in newItems.Except(oldItems))
             {
-                if (ConfigManager.shouldInstantKillEnemyInCart.Value)
+                var tracker = GetTracker(entered);
+                if (tracker == null) continue;
+            
+                tracker.PreviousCart = tracker.CurrentCart;
+                tracker.CurrentCart = __instance;
+            
+                tracker.InterruptExpanding();
+                if (tracker.IsValidShrinkableItem())
                 {
-                    EnemyExecutionManager.TryMarkForExecution(item);
+                    ShrinkData data = ShrinkUtils.GetShrinkData(tracker.GrabObject);
+
+                    Vector3 original = tracker.InitialScale;
+                    Vector3 target = SetTargetShrink(original, data);
+                    data.Target = target;
+
+                    NetworkHelper.ProcessingShrinking(tracker, data);
                 }
-
-                ApplyBatteryLifeOnce(item, state);
-                ApplyUnbreakableLogic(item, state);
-
-                if (item == null || !item.GetComponent<ValuableObject>())
-                    continue;
-
-                if (!ShrinkOperationManager.TryAssign(item, __instance))
-                {
-                    LogWrapper.Warning($"[ShrinkControl] Object {item.name} is already being scaled by another cart.");
-                    continue;
-                }
-
-                if (!state.OriginalScales.ContainsKey(item))
-                {
-                    var tracker = item.GetComponent<OriginalScaleTracker>() ??
-                                  item.gameObject.AddComponent<OriginalScaleTracker>();
-                    tracker.InitializeIfNeeded();
-
-                    state.OriginalScales[item] = tracker.InitialScale;
-                    state.ObjectsToShrink.Add(item);
-
-                    LogWrapper.Debug(
-                        $"[ShrinkControl] Registered original scale for {item.name}: {tracker.InitialScale}");
-                }
+            
+                ShrinkEvents.RaiseEnterCart(tracker);
+                ShrinkTrackerManager.Instance.RegisterShrinkCompletion(__instance, tracker.GrabObject);
             }
 
-            List<PhysGrabObject> completedShrinks = new();
-
-            foreach (var item in state.ObjectsToShrink)
+            // ➖ Objets qui sont sortis du cart
+            foreach (var exited in oldItems.Except(newItems))
             {
-                if (item == null || !state.OriginalScales.ContainsKey(item))
-                    continue;
+                var tracker = GetTracker(exited);
+                if (tracker == null) continue;
 
-                ShrinkData data = ShrinkUtils.GetShrinkData(item);
-                Vector3 original = state.OriginalScales[item];
+                tracker.PreviousCart = tracker.CurrentCart;
+                tracker.ClearCart();
 
-                Vector3 target = Vector3.Max(original * data.ScaleShrinkFactor, original * data.MinShrinkRatio);
-                target = Vector3.Min(target, original);
-                
-                PhysGrabObjectImpactDetector detector = item.GetComponent<PhysGrabObjectImpactDetector>();
-                detector.destroyDisable = true;
-
-                item.transform.localScale =
-                    Vector3.MoveTowards(item.transform.localScale, target, shrinkSpeed * Time.deltaTime);
-
-                if (Vector3.Distance(item.transform.localScale, target) < 0.01f)
+                if (!ConfigManager.shouldKeepShrunk.Value)
                 {
-                    if (ConfigManager.shouldChangingMass.Value)
+                    if (tracker.IsExpandable() && tracker.IsValidShrinkableItem())
                     {
-                        ShrinkMassUtils.ApplyShrinkedMass(item, data);
-                    }
-
-                    completedShrinks.Add(item);
-                    LogWrapper.Warning($"Shrink {item.name} → original: {original}, target: {target}, final scale ratio: {target.x / original.x:0.00}, dimensions: {data.Dimensions}");
-                    LogWrapper.Info($"[ShrinkQueue] Adding '{item.name}' to shrink list.");
-                }
-            }
-
-            foreach (var item in completedShrinks)
-            {
-                state.ObjectsToShrink.Remove(item);
-                ShrinkOperationManager.Release(item);
-            }
-
-            // Restore logic
-            if (!ConfigManager.shouldKeepShrunk.Value)
-            {
-                List<PhysGrabObject> toRestore = new();
-                foreach (var kvp in state.OriginalScales)
-                {
-                    var obj = kvp.Key;
-                    if (obj == null || items.Contains(obj)) continue;
-
-                    Vector3 original = kvp.Value;
-
-                    obj.transform.localScale =
-                        Vector3.MoveTowards(obj.transform.localScale, original, shrinkSpeed * Time.deltaTime);
-
-                    if (Vector3.Distance(obj.transform.localScale, kvp.Value) < 0.01f)
-                    {
-                        if (ConfigManager.shouldChangingMass.Value)
-                        {
-                            ShrinkMassUtils.RestoreOriginalMass(obj);
-                        }
-
-                        toRestore.Add(obj);
-                    }
-
-                    // Gestion des objets incassables à vie ou non
-                    var detector = obj.GetComponent<PhysGrabObjectImpactDetector>();
-                    if (detector != null)
-                    {
-                        if (ConfigManager.shouldValuableStayUnbreakable.Value &&
-                            state.MarkedUnbreakableObjects.Contains(obj))
-                        {
-                            detector.destroyDisable = true;
-                        }
-                        else
-                        {
-                            detector.destroyDisable = false;
-                        }
+                        NetworkHelper.ProcessingExpanding(tracker);
                     }
                 }
 
-                foreach (var obj in toRestore)
-                {
-                    state.OriginalScales.Remove(obj);
-                    state.ModifiedBatteryLifeObjects.Remove(obj);
-                    ShrinkOperationManager.Release(obj);
-                }
+                ShrinkEvents.RaiseExitCart(tracker);
+                ShrinkTrackerManager.Instance.UnregisterShrinkCompletion(__instance, tracker.GrabObject);
             }
         }
 
-        private static void CleanupCartStates()
+        public static ShrinkableTracker GetTracker(PhysGrabObject obj)
         {
-            List<PhysGrabCart> cartsToRemove = new();
+            if (obj == null || obj.gameObject == null)
+                return null;
 
-            foreach (var kvp in cartStates)
+            var tracker = obj.GetComponent<ShrinkableTracker>();
+            if (tracker == null)
             {
-                var cart = kvp.Key;
-                var state = kvp.Value;
-
-                if (cart == null || !cart.gameObject || cart.gameObject.scene.name == null)
-                {
-                    state.OriginalScales.Clear();
-                    state.ObjectsToShrink.Clear();
-                    state.ModifiedBatteryLifeObjects.Clear();
-                    state.MarkedUnbreakableObjects.Clear();
-
-                    cartsToRemove.Add(cart);
-                }
+                tracker = obj.gameObject.AddComponent<ShrinkableTracker>();
+                tracker.Init(obj);
             }
 
-            foreach (var cart in cartsToRemove)
-            {
-                cartStates.Remove(cart);
-                LogWrapper.Info($"[CartCleanup] Removed destroyed cart '{cart?.name}' from tracking.");
-
-                ShrinkOperationManager.ClearCart(cart);
-            }
+            return tracker;
         }
 
-        private static void ApplyBatteryLifeOnce(PhysGrabObject item, CartShrinkState state)
+        public static Vector3 SetTargetShrink(
+            Vector3 original,
+            ShrinkData data
+        )
         {
-            if (state.ModifiedBatteryLifeObjects.Contains(item)) return;
+            Vector3 target = Vector3.Max(original * data.ScaleShrinkFactor, original * data.MinShrinkRatio);
+            target = Vector3.Min(target, original);
 
-            bool modified = false;
-
-            if (ConfigManager.shouldCartWeaponBatteryLifeInfinite.Value &&
-                ItemCartWeaponUtils.TryChangeCartWeaponBatteryLife(item))
-            {
-                modified = true;
-            }
-
-            if (ConfigManager.shouldItemMeleeBatteryLifeInfinite.Value)
-            {
-                ItemBatteryUtils.SetMeleeBatteryLife(item);
-                modified = true;
-            }
-
-            if (ConfigManager.shouldItemGunBatteryLifeInfinite.Value)
-            {
-                ItemBatteryUtils.SetGunBatteryLife(item);
-                modified = true;
-            }
-
-            if (ConfigManager.shouldItemDroneBatteryLifeInfinite.Value)
-            {
-                ItemBatteryUtils.SetDroneBatteryLife(item);
-                modified = true;
-            }
-
-            if (modified)
-            {
-                state.ModifiedBatteryLifeObjects.Add(item);
-                LogWrapper.Info($"[BatteryLife] Applied infinite battery to: {item.name}");
-            }
-        }
-
-        private static void ApplyUnbreakableLogic(PhysGrabObject item, CartShrinkState state)
-        {
-            if (item == null) return;
-
-            var detector = item.GetComponent<PhysGrabObjectImpactDetector>();
-            if (detector == null) return;
-
-            // Si le config est active, applique le flag dans le cart
-            if (ConfigManager.shouldValuableSafeInsideCart.Value)
-            {
-                detector.destroyDisable = true;
-
-                // Si on doit le rendre permanent
-                if (ConfigManager.shouldValuableStayUnbreakable.Value)
-                {
-                    if (!state.MarkedUnbreakableObjects.Contains(item))
-                    {
-                        state.MarkedUnbreakableObjects.Add(item);
-                        LogWrapper.Info($"[Unbreakable] Marked {item.name} as permanently unbreakable.");
-                    }
-                }
-            }
-
-            // Si jamais il a été marqué pour être permanent, on continue à forcer même après la sortie du cart
-            if (ConfigManager.shouldValuableStayUnbreakable.Value && state.MarkedUnbreakableObjects.Contains(item))
-            {
-                detector.destroyDisable = true;
-            }
+            return target;
         }
     }
 }

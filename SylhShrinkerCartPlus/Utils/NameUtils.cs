@@ -7,9 +7,17 @@
             return name.Replace("Valuable ", "").Replace("(Clone)", "").Trim();
         }
         
-        public static bool ContainsIgnoreCase(string source, string toCheck)
+        public static string CleanCloneSuffix(string name)
         {
-            return source?.IndexOf(toCheck, StringComparison.OrdinalIgnoreCase) >= 0;
+            return name.Replace("(Clone)", "").Trim();
+        }
+        
+        public static bool ContainsIgnoreCase(
+            string source, 
+            string toCheck, StringComparison comp = StringComparison.OrdinalIgnoreCase
+            )
+        {
+            return source?.IndexOf(toCheck, comp) >= 0;
         }
 
         public static bool TryParseEnemyValuable(
