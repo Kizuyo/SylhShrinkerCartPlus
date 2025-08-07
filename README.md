@@ -10,13 +10,15 @@
 
 ## Feedback and Suggestions
 If you have any feedback or suggestions, feel free to open an issue on the [GitHub](https://github.com/Voydahn/SylhShrinkerCartPlus.git) repository.
+(Don’t forget to read this [this wiki page](https://thunderstore.io/c/repo/p/Sylhaance/SylhShrinkerCartPlus/wiki/3843-0-feedback-or-suggestions/) to learn how to properly report issues on GitHub!)
+
+**This mod needs to be installed on both the client and the host**
 
 ## Mod dependancies : 
 [BepInExPack v5.4.2100](https://thunderstore.io/c/repo/p/BepInEx/BepInExPack/)
 
 ## Mod Config !:
 Make sure to use the '[REPOConfig](https://thunderstore.io/c/repo/p/nickklmao/REPOConfig/)' mod so you can tweak the mod’s settings directly in-game!
-
 
 ## 💡 Key Features
 - ✅ **Smooth scaling**: no instant size changes – everything shrinks gently.
@@ -27,7 +29,6 @@ Make sure to use the '[REPOConfig](https://thunderstore.io/c/repo/p/nickklmao/RE
 - ✅ **Also change the mass**: You can activate an option to adjust the mass of shrunk objects inside the cart!
 - ✅ **Infinite battery**: You can make melee, gun, drone, or cart weapons have infinite battery while in the cart.
 - ✅ **Enemy instakill**: Enemies placed inside a C.A.R.T can be auto-killed (properly, with orb drop!).
-- ✅ **Unbreakable Valuables**: Option to make Valuables invincible inside the cart – and even after, if you want them to stay safe forever.
 
 Enjoy smoother carts and cleaner gameplay. No more massive furniture bouncing out like a possessed fridge. 😉
 
@@ -35,6 +36,10 @@ Enjoy smoother carts and cleaner gameplay. No more massive furniture bouncing ou
 Check out the [wiki](https://thunderstore.io/c/repo/p/Sylhaance/SylhShrinkerCartPlus/wiki/) below to dive deeper into it!
 
 # ChangeLog
+## v0.4.3
+- Overall improvement of the mod for multiplayer (Only the host's configuration should be taken into account now)
+- Protects Valuables during shrinking and expanding processes
+- 
 ## v0.4.2
 - I've temporarily removed the unbreakable feature — I might reintroduce it later. I just need more information to make it work properly
 
