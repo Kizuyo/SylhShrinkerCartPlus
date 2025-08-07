@@ -1,12 +1,11 @@
 ﻿using SylhShrinkerCartPlus.Components;
 using SylhShrinkerCartPlus.Utils;
-using SylhShrinkerCartPlus.Utils.Shrink.Resolver.Valuable;
 
 namespace SylhShrinkerCartPlus.Manager
 {
     public class ShrinkTrackerManager
     {
-        private static readonly ShrinkTrackerManager _instance = new ShrinkTrackerManager();
+        private static readonly ShrinkTrackerManager _instance = new();
         public static ShrinkTrackerManager Instance => _instance;
 
         private readonly Dictionary<PhysGrabObject, ShrinkableTracker> _trackers = new();
@@ -152,9 +151,6 @@ namespace SylhShrinkerCartPlus.Manager
                 ? new HashSet<PhysGrabObject>(set)
                 : new HashSet<PhysGrabObject>();
         }
-        
-        
-        
         
         public void LogAll()
         {

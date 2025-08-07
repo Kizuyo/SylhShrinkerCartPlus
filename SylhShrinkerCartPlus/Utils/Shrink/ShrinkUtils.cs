@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
 using SylhShrinkerCartPlus.Components;
+using SylhShrinkerCartPlus.Config;
 using SylhShrinkerCartPlus.Models;
 using SylhShrinkerCartPlus.Resolver.Valuable;
-using SylhShrinkerCartPlus.Utils.Shrink.Config;
 using UnityEngine;
 
 namespace SylhShrinkerCartPlus.Utils.Shrink
@@ -16,7 +16,7 @@ namespace SylhShrinkerCartPlus.Utils.Shrink
             ShrinkData shrinkData
         )
         {
-            if (!ConfigManager.shouldShrinkEnemyOrbs.Value)
+            if (!StaticConfig.Instance.shouldShrinkEnemyOrbs)
             {
                 return shrinkData;
             }
@@ -24,16 +24,16 @@ namespace SylhShrinkerCartPlus.Utils.Shrink
             switch (category.Category)
             {
                 case EnemyValuableCategoryEnum.Small:
-                    shrinkData.MinShrinkRatio = ConfigManager.shrinkEnemyOrbSmall.Value;
+                    shrinkData.MinShrinkRatio = StaticConfig.Instance.shrinkEnemyOrbSmall;
                     break;
                 case EnemyValuableCategoryEnum.Medium:
-                    shrinkData.MinShrinkRatio = ConfigManager.shrinkEnemyOrbMedium.Value;
+                    shrinkData.MinShrinkRatio = StaticConfig.Instance.shrinkEnemyOrbMedium;
                     break;
                 case EnemyValuableCategoryEnum.Big:
-                    shrinkData.MinShrinkRatio = ConfigManager.shrinkEnemyOrbBig.Value;
+                    shrinkData.MinShrinkRatio = StaticConfig.Instance.shrinkEnemyOrbBig;
                     break;
                 case EnemyValuableCategoryEnum.Berserker:
-                    shrinkData.MinShrinkRatio = ConfigManager.shrinkEnemyOrbBig.Value;
+                    shrinkData.MinShrinkRatio = StaticConfig.Instance.shrinkEnemyOrbBig;
                     break;
             }
 
@@ -63,60 +63,60 @@ namespace SylhShrinkerCartPlus.Utils.Shrink
             switch (category.Category)
             {
                 case ValuableCategoryEnum.Tiny:
-                    if (!ConfigManager.shouldShrinkTiny.Value)
+                    if (!StaticConfig.Instance.shouldShrinkTiny)
                     {
                         return shrinkData;
                     }
 
-                    shrinkData.MinShrinkRatio = ConfigManager.shrinkFactorTiny.Value;
+                    shrinkData.MinShrinkRatio = StaticConfig.Instance.shrinkFactorTiny;
                     break;
                 case ValuableCategoryEnum.Small:
-                    if (!ConfigManager.shouldShrinkSmall.Value)
+                    if (!StaticConfig.Instance.shouldShrinkSmall)
                     {
                         return shrinkData;
                     }
 
-                    shrinkData.MinShrinkRatio = ConfigManager.shrinkFactorSmall.Value;
+                    shrinkData.MinShrinkRatio = StaticConfig.Instance.shrinkFactorSmall;
                     break;
                 case ValuableCategoryEnum.Medium:
-                    if (!ConfigManager.shouldShrinkMedium.Value)
+                    if (!StaticConfig.Instance.shouldShrinkMedium)
                     {
                         return shrinkData;
                     }
 
-                    shrinkData.MinShrinkRatio = ConfigManager.shrinkFactorMedium.Value;
+                    shrinkData.MinShrinkRatio = StaticConfig.Instance.shrinkFactorMedium;
                     break;
                 case ValuableCategoryEnum.Big:
-                    if (!ConfigManager.shouldShrinkBig.Value)
+                    if (!StaticConfig.Instance.shouldShrinkBig)
                     {
                         return shrinkData;
                     }
 
-                    shrinkData.MinShrinkRatio = ConfigManager.shrinkFactorBig.Value;
+                    shrinkData.MinShrinkRatio = StaticConfig.Instance.shrinkFactorBig;
                     break;
                 case ValuableCategoryEnum.Wide:
-                    if (!ConfigManager.shouldShrinkWide.Value)
+                    if (!StaticConfig.Instance.shouldShrinkWide)
                     {
                         return shrinkData;
                     }
 
-                    shrinkData.MinShrinkRatio = ConfigManager.shrinkFactorWide.Value;
+                    shrinkData.MinShrinkRatio = StaticConfig.Instance.shrinkFactorWide;
                     break;
                 case ValuableCategoryEnum.Tall:
-                    if (!ConfigManager.shouldShrinkTall.Value)
+                    if (!StaticConfig.Instance.shouldShrinkTall)
                     {
                         return shrinkData;
                     }
 
-                    shrinkData.MinShrinkRatio = ConfigManager.shrinkFactorTall.Value;
+                    shrinkData.MinShrinkRatio = StaticConfig.Instance.shrinkFactorTall;
                     break;
                 case ValuableCategoryEnum.VeryTall:
-                    if (!ConfigManager.shouldShrinkVeryTall.Value)
+                    if (!StaticConfig.Instance.shouldShrinkVeryTall)
                     {
                         return shrinkData;
                     }
 
-                    shrinkData.MinShrinkRatio = ConfigManager.shrinkFactorVeryTall.Value;
+                    shrinkData.MinShrinkRatio = StaticConfig.Instance.shrinkFactorVeryTall;
                     break;
             }
 
@@ -189,7 +189,7 @@ namespace SylhShrinkerCartPlus.Utils.Shrink
 
             if (category == null)
             {
-                shrinkData.MinShrinkRatio = ConfigManager.fallbackShrinkFactor.Value;
+                shrinkData.MinShrinkRatio = StaticConfig.Instance.fallbackShrinkFactor;
             }
             else
             {
@@ -210,7 +210,7 @@ namespace SylhShrinkerCartPlus.Utils.Shrink
                         break;
                     
                     default:
-                        shrinkData.MinShrinkRatio = ConfigManager.fallbackShrinkFactor.Value;
+                        shrinkData.MinShrinkRatio = StaticConfig.Instance.fallbackShrinkFactor;
                         break;
                 }
             }

@@ -1,6 +1,4 @@
-﻿using SylhShrinkerCartPlus.Resolver.Valuable;
-
-namespace SylhShrinkerCartPlus.Resolver.Valuable
+﻿namespace SylhShrinkerCartPlus.Resolver.Valuable
 {
     public static class CategoryResolverRegistry
     {

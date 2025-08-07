@@ -1,11 +1,9 @@
-﻿using SylhShrinkerCartPlus.Manager;
+﻿using SylhShrinkerCartPlus.Config;
+using SylhShrinkerCartPlus.Manager;
 using UnityEngine;
-using SylhShrinkerCartPlus.Models;
 using SylhShrinkerCartPlus.Utils;
 using SylhShrinkerCartPlus.Utils.Cheat.Cart;
-using SylhShrinkerCartPlus.Utils.Events;
-using SylhShrinkerCartPlus.Utils.Shrink.Config;
-using SylhShrinkerCartPlus.Utils.Shrink.Utils.Cheat.Enemy;
+using SylhShrinkerCartPlus.Utils.Cheat.Enemy;
 
 namespace SylhShrinkerCartPlus.Components
 {
@@ -32,15 +30,24 @@ namespace SylhShrinkerCartPlus.Components
         public PhysGrabObject GrabObject;
         private float _shrinkSpeed;
 
+        public PhysGrabObjectImpactDetector Detector;
+        public float InitialFragility { get; private set; }
+        public float Fragility { get; private set; }
+        public bool IsValidValuable { get; private set; }
+        
+
         public void Init(PhysGrabObject owner)
         {
             GrabObject = owner;
+
+            IsValidValuable = IsValidShrinkableItem();
             
             InitialScale = owner.transform.localScale;
             InitialMass = owner.massOriginal;
-            _shrinkSpeed = ConfigManager.defaultShrinkSpeed.Value;
+            _shrinkSpeed = StaticConfig.Instance.defaultShrinkSpeed;
 
             InitBattery();
+            InitFragility();
         }
         
         public void InitBattery()
@@ -51,6 +58,27 @@ namespace SylhShrinkerCartPlus.Components
                 BatteryLife = currentBattery;
             }
         }
+        
+        public void InitFragility()
+        {
+            Detector = GrabObject.GetComponent<PhysGrabObjectImpactDetector>();
+            if (Detector == null) return;
+            
+            InitialFragility = Detector.fragility;
+            Fragility = 0f;
+        }
+
+        public void MakeUnbreakable()
+        {
+            if (!IsValidValuable) return;
+            Detector.fragility = Fragility;
+        }
+
+        public void MakeBreakable()
+        {
+            if (!IsValidValuable) return;
+            Detector.fragility = InitialFragility;
+        }
 
         private void Awake()
         {
@@ -59,8 +87,7 @@ namespace SylhShrinkerCartPlus.Components
 
             if (GrabObject != null && InitialScale == Vector3.zero)
                 InitialScale = GrabObject.transform.localScale;
-
-            _shrinkSpeed = ConfigManager.defaultShrinkSpeed.Value;
+            
             ShrinkTrackerManager.Instance.Register(this);
         }
         
@@ -73,6 +100,7 @@ namespace SylhShrinkerCartPlus.Components
         {
             if (IsShrinking)
             {
+                MakeUnbreakable();
                 GrabObject.transform.localScale = Vector3.MoveTowards(
                     GrabObject.transform.localScale,
                     TargetScale,
@@ -97,6 +125,7 @@ namespace SylhShrinkerCartPlus.Components
 
             if (IsExpanding)
             {
+                MakeUnbreakable();
                 GrabObject.transform.localScale = Vector3.MoveTowards(
                     GrabObject.transform.localScale,
                     InitialScale,

@@ -1,8 +1,6 @@
 ﻿using BepInEx.Configuration;
-using SylhShrinkerCartPlus.Utils.Shrink.Resolver.Valuable;
-using UnityEngine;
 
-namespace SylhShrinkerCartPlus.Utils.Shrink.Config
+namespace SylhShrinkerCartPlus.Config
 {
     public class ConfigManager
     {

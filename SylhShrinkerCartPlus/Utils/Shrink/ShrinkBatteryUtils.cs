@@ -1,6 +1,6 @@
 ﻿using SylhShrinkerCartPlus.Components;
+using SylhShrinkerCartPlus.Config;
 using SylhShrinkerCartPlus.Utils.Cheat.Cart;
-using SylhShrinkerCartPlus.Utils.Shrink.Config;
 using UnityEngine;
 
 namespace SylhShrinkerCartPlus.Utils.Shrink
@@ -13,9 +13,9 @@ namespace SylhShrinkerCartPlus.Utils.Shrink
         {
             ApplyCartWeaponBattery(tracker);
 
-            ApplyBatteryLogic<ItemMelee>(tracker, ConfigManager.shouldItemMeleeBatteryLifeInfinite.Value);
-            ApplyBatteryLogic<ItemGun>(tracker, ConfigManager.shouldItemGunBatteryLifeInfinite.Value);
-            ApplyBatteryLogic<ItemDrone>(tracker, ConfigManager.shouldItemDroneBatteryLifeInfinite.Value);
+            ApplyBatteryLogic<ItemMelee>(tracker, StaticConfig.Instance.shouldItemMeleeBatteryLifeInfinite);
+            ApplyBatteryLogic<ItemGun>(tracker, StaticConfig.Instance.shouldItemGunBatteryLifeInfinite);
+            ApplyBatteryLogic<ItemDrone>(tracker, StaticConfig.Instance.shouldItemDroneBatteryLifeInfinite);
 
             ApplyGenericBattery(tracker);
         }
@@ -28,7 +28,7 @@ namespace SylhShrinkerCartPlus.Utils.Shrink
                 ) || battery == null)
                 return;
 
-            if (ConfigManager.shouldCartWeaponBatteryLifeInfinite.Value)
+            if (StaticConfig.Instance.shouldCartWeaponBatteryLifeInfinite)
             {
                 SetBatteryLife(battery, BigBatteryLife);
                 tracker.CanResetBattery = true;
@@ -68,7 +68,7 @@ namespace SylhShrinkerCartPlus.Utils.Shrink
             
             if (!tracker.TryGetComponent<ItemBattery>(out var battery)) return;
 
-            if (ConfigManager.shouldItemGenericBatteryLifeInfinite.Value)
+            if (StaticConfig.Instance.shouldItemGenericBatteryLifeInfinite)
             {
                 SetBatteryLife(battery, BigBatteryLife);
                 tracker.CanResetBattery = true;

@@ -1,11 +1,10 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using SylhShrinkerCartPlus.Components;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
 
-namespace SylhShrinkerCartPlus.Utils.Shrink.Utils.Cheat.Enemy
+namespace SylhShrinkerCartPlus.Utils.Cheat.Enemy
 {
     public static class EnemyExecutionManager
     {

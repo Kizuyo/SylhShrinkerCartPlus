@@ -1,8 +1,8 @@
 ﻿using Photon.Pun;
 using SylhShrinkerCartPlus.Components;
+using SylhShrinkerCartPlus.Config;
 using SylhShrinkerCartPlus.Models;
 using SylhShrinkerCartPlus.Utils.GameManagerUtils;
-using SylhShrinkerCartPlus.Utils.Shrink.Config;
 using UnityEngine;
 
 namespace SylhShrinkerCartPlus.Utils.Shrink.Network;
@@ -48,7 +48,7 @@ public static class NetworkHelper
     {
         if (GameModeHelper.IsSinglePlayer)
         {
-            ApplyMass(tracker, ConfigManager.shrinkMassValue.Value);
+            ApplyMass(tracker, StaticConfig.Instance.shrinkMassValue);
             return;
         }
 
@@ -62,8 +62,8 @@ public static class NetworkHelper
         }
 
         photonView.RPC("ProcessingChangingMassRPC", RpcTarget.All,
-            ConfigManager.shrinkMassValue.Value,
-            ConfigManager.shouldChangingMass.Value
+            StaticConfig.Instance.shrinkMassValue,
+            StaticConfig.Instance.shouldChangingMass
         );
     }
     

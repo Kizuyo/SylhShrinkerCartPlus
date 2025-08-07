@@ -5,6 +5,7 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using SylhShrinkerCartPlus.Components;
+using SylhShrinkerCartPlus.Config;
 using SylhShrinkerCartPlus.Manager;
 using SylhShrinkerCartPlus.Models;
 using SylhShrinkerCartPlus.Resolver.Valuable;
@@ -12,7 +13,6 @@ using SylhShrinkerCartPlus.Utils;
 using SylhShrinkerCartPlus.Utils.Events;
 using SylhShrinkerCartPlus.Utils.RunManagerUtils;
 using SylhShrinkerCartPlus.Utils.Shrink;
-using SylhShrinkerCartPlus.Utils.Shrink.Config;
 using SylhShrinkerCartPlus.Utils.Shrink.Network;
 
 namespace SylhShrinkerCartPlus
@@ -22,7 +22,7 @@ namespace SylhShrinkerCartPlus
     {
         private const string mod_guid = "sylhaance.SylhShrinkerCartPlus";
         private const string mod_name = "Sylh Shrinker Cart Plus";
-        private const string mod_version = "0.4.1";
+        private const string mod_version = "0.4.3";
 
         private Harmony harmony;
         internal static ManualLogSource Log;
@@ -33,6 +33,8 @@ namespace SylhShrinkerCartPlus
             Log.LogInfo("[SylhShrinkerCartPlus] Plugin loaded.");
 
             ConfigManager.Initialize(this);
+            StaticConfig.RefreshInstanceFromCurrentConfig();
+            
             ConfigEvents.Initialize();
 
             CategoryResolverRegistry.Register(new EnemyCategoryResolver());
@@ -44,50 +46,56 @@ namespace SylhShrinkerCartPlus
 
             ShrinkEvents.OnShrinkStarted += (tracker) =>
             {
-                LogWrapper.Warning($"⏳ [Event Hook] Début du rétrécissement pour {tracker.name} !");
+                LogWrapper.Debug($"⏳ [Event Hook] Début du rétrécissement pour {tracker.name} !");
                 NetworkHelper.ProcessingChangingMass(tracker);
             };
 
             ShrinkEvents.OnShrinkCompleted += (tracker) =>
             {
-                LogWrapper.Warning($"🎉 [Event Hook] Fin du rétrécissement pour {tracker.name} !");
+                LogWrapper.Debug($"🎉 [Event Hook] Fin du rétrécissement pour {tracker.name} !");
+                tracker.MakeBreakable();
             };
 
             ShrinkEvents.OnExpandStarted += (tracker) =>
             {
-                LogWrapper.Warning($"⏳ [Event Hook] Début de l'agrandissement pour {tracker.name} !");
+                LogWrapper.Debug($"⏳ [Event Hook] Début de l'agrandissement pour {tracker.name} !");
                 NetworkHelper.ProcessingRestoringMass(tracker);
             };
 
             ShrinkEvents.OnExpandCompleted += (tracker) =>
             {
-                LogWrapper.Warning($"🎉 [Event Hook] Fin de l'agrandissement pour {tracker.name} !");
+                LogWrapper.Debug($"🎉 [Event Hook] Fin de l'agrandissement pour {tracker.name} !");
+                tracker.MakeBreakable();
             };
 
             ShrinkEvents.OnEnteredCart += (tracker) =>
             {
-                LogWrapper.Warning($"📥 [Event Hook] {tracker.name} vient d'entrer dans un CART !");
+                LogWrapper.Debug($"📥 [Event Hook] {tracker.name} vient d'entrer dans un CART !");
                 NetworkHelper.ProcessingChangingBatteryLife(tracker);
-                
-                // ShrinkUnbreakableUtils.ApplyUnbreakableLogic(tracker);
+                tracker.MakeUnbreakable();
             };
 
             ShrinkEvents.OnExitedCart += (tracker) =>
             {
-                LogWrapper.Warning($"📤 [Event Hook] {tracker.name} vient de sortir d’un CART !");
+                LogWrapper.Debug($"📤 [Event Hook] {tracker.name} vient de sortir d’un CART !");
+                tracker.MakeBreakable();
             };
 
             ShrinkEvents.OnMassChanged += (obj, newMass) =>
             {
-                LogWrapper.Warning($"⚖️ [Event Hook] {obj.name} → masse changée à {newMass:F2}");
+                LogWrapper.Debug($"⚖️ [Event Hook] {obj.name} → masse changée à {newMass:F2}");
             };
 
             CartEvents.OnCartObjectAdded += (cart, obj) =>
             {
-                LogWrapper.Warning($"[CartEventBus] 🧲 Objet {obj.name} ajouté dans le cart : {cart.name}");
-                CartEvents.RaiseEnterCart(obj, cart);
+                LogWrapper.Debug($"[CartEventBus] 🧲 Objet {obj.name} ajouté dans le cart : {cart.name}");
             };
         }
+
+        // private void Update()
+        // {
+        //     CartEventHookManager.Update();
+        // }
     }
 
     [HarmonyPatch(typeof(PhysGrabInCart), nameof(PhysGrabInCart.Add))]
@@ -113,7 +121,7 @@ namespace SylhShrinkerCartPlus
             {
                 return;
             }
-            
+
             __instance.onDestroy.AddListener(() =>
             {
                 var physGrabObject = __instance.GetComponentInChildren<PhysGrabObject>();
@@ -122,15 +130,15 @@ namespace SylhShrinkerCartPlus
                     Debug.LogWarning("[ShrinkerPlus] Aucun PhysGrabObject trouvé pour destruction.");
                     return;
                 }
-                
+
                 ShrinkableTracker tracker = __instance.gameObject.GetComponent<ShrinkableTracker>();
                 if (tracker == null) return;
-                
+
                 string cartName = tracker.CurrentCart.name;
 
                 ShrinkTrackerManager.Instance.UnregisterShrinkCompletion(tracker.CurrentCart, tracker.GrabObject);
                 ShrinkTrackerManager.Instance.Unregister(tracker);
-                
+
                 Debug.Log($"[ShrinkerPlus] 🧹 '{physGrabObject.name}' supprimé des listes de '{cartName}'.");
             });
         }
@@ -145,12 +153,12 @@ namespace SylhShrinkerCartPlus
             {
                 return;
             }
-            
+
             ShrinkableTracker tracker = __instance.gameObject.GetComponent<ShrinkableTracker>();
-            
+
             ShrinkTrackerManager.Instance.UnregisterShrinkCompletion(tracker.CurrentCart, tracker.GrabObject);
             ShrinkTrackerManager.Instance.Unregister(tracker);
-            
+
             LogWrapper.Warning(
                 $"L'objet {__instance.name} vient de subir une destruction par le biais d'un autre méthode que subir des dégâts");
         }
@@ -168,30 +176,30 @@ namespace SylhShrinkerCartPlus
                 {
                     return;
                 }
-                
+
                 var tracker = __instance.GetComponent<ShrinkableTracker>();
                 if (tracker == null)
                 {
                     tracker = __instance.gameObject.AddComponent<ShrinkableTracker>();
                     tracker.Init(__instance);
                 }
-                
+
                 // ✅ Ajout du PhotonView si manquant
                 if (__instance.GetComponent<PhotonView>() == null)
                 {
                     var pv = __instance.gameObject.AddComponent<PhotonView>();
                     pv.ViewID = 0; // Laisse Photon s'en charger si tu n’as pas de gestion manuelle
-                    LogWrapper.Warning($"[StartPatch] 🛰️ PhotonView ajouté à {__instance.name}");
+                    // LogWrapper.Warning($"[StartPatch] 🛰️ PhotonView ajouté à {__instance.name}");
                 }
 
                 // ✅ Ajout du dispatcher réseau si manquant
                 if (__instance.GetComponent<ShrinkNetworkDispatcher>() == null)
                 {
                     __instance.gameObject.AddComponent<ShrinkNetworkDispatcher>();
-                    LogWrapper.Warning($"[StartPatch] 🔌 Dispatcher réseau ajouté à {__instance.name}");
+                    // LogWrapper.Warning($"[StartPatch] 🔌 Dispatcher réseau ajouté à {__instance.name}");
                 }
 
-                LogWrapper.Warning($"[StartPatch] ✅ Tracker ajouté à {__instance.name}");
+                // LogWrapper.Warning($"[StartPatch] ✅ Tracker ajouté à {__instance.name}");
             }
             catch (Exception ex)
             {
@@ -200,18 +208,40 @@ namespace SylhShrinkerCartPlus
         }
     }
 
+    [HarmonyPatch(typeof(PlayerAvatar), "Start")]
+    public static class PlayerAvatarStartPatch
+    {
+        public static void Postfix(PlayerAvatar __instance)
+        {
+            if (__instance.GetComponent<ConfigNetworkDispatcher>() == null)
+            {
+                __instance.gameObject.AddComponent<ConfigNetworkDispatcher>();
+                LogWrapper.Debug($"[SyncInit] Dispatcher ajouté à {__instance.name}");
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(RunManager), "ChangeLevel")]
+    public static class RunManagerChangeLevelPatch
+    {
+        [HarmonyPostfix]
+        private static void Postfix(
+            RunManager __instance,
+            bool _completedLevel,
+            bool _levelFailed,
+            RunManager.ChangeLevelType _changeLevelType = RunManager.ChangeLevelType.Normal
+        )
+        {
+            ShrinkTrackerManager.Instance.ClearAll();
+            CartEventHookManager.Clear();
+            
+            ShrinkerCartPatch.PushConfigToClients();
+        }
+    }
+
     [HarmonyPatch(typeof(PhysGrabCart), "ObjectsInCart")]
     public static class ShrinkerCartPatch
     {
-        static ShrinkerCartPatch()
-        {
-            SceneManager.sceneLoaded += (_, _) =>
-            {
-                LogWrapper.Info("[Sylh ShrinkerCartPlus] New scene loaded — clearing lists.");
-                ShrinkTrackerManager.Instance.ClearAll();
-            };
-        }
-
         public static void Postfix(PhysGrabCart __instance)
         {
             if (!RunManagerHelper.IsInsideValidLevel())
@@ -226,16 +256,18 @@ namespace SylhShrinkerCartPlus
             var newItems = new HashSet<PhysGrabObject>(items);
             var oldItems = new HashSet<PhysGrabObject>(
                 ShrinkTrackerManager.Instance.GetCompletedShrunkObjects(__instance)
-                );
+            );
 
             foreach (var entered in newItems.Except(oldItems))
             {
                 var tracker = GetTracker(entered);
                 if (tracker == null) continue;
-            
+
+                ShrinkEvents.RaiseEnterCart(tracker);
+
                 tracker.PreviousCart = tracker.CurrentCart;
                 tracker.CurrentCart = __instance;
-            
+
                 tracker.InterruptExpanding();
                 if (tracker.IsValidShrinkableItem())
                 {
@@ -247,12 +279,11 @@ namespace SylhShrinkerCartPlus
 
                     NetworkHelper.ProcessingShrinking(tracker, data);
                 }
-            
-                ShrinkEvents.RaiseEnterCart(tracker);
+
+                // ShrinkEvents.RaiseEnterCart(tracker);
                 ShrinkTrackerManager.Instance.RegisterShrinkCompletion(__instance, tracker.GrabObject);
             }
 
-            // ➖ Objets qui sont sortis du cart
             foreach (var exited in oldItems.Except(newItems))
             {
                 var tracker = GetTracker(exited);
@@ -261,7 +292,7 @@ namespace SylhShrinkerCartPlus
                 tracker.PreviousCart = tracker.CurrentCart;
                 tracker.ClearCart();
 
-                if (!ConfigManager.shouldKeepShrunk.Value)
+                if (!StaticConfig.Instance.shouldKeepShrunk)
                 {
                     if (tracker.IsExpandable() && tracker.IsValidShrinkableItem())
                     {
@@ -298,6 +329,38 @@ namespace SylhShrinkerCartPlus
             target = Vector3.Min(target, original);
 
             return target;
+        }
+
+        public static void PushConfigToClients()
+        {
+            try
+            {
+                if (!RunManagerHelper.IsInsideValidLevel()) return;
+
+                if (!SemiFunc.IsMasterClientOrSingleplayer()) return;
+
+                StaticConfig.RefreshInstanceFromCurrentConfig();
+                string json = StaticConfig.Instance.ToJson();
+
+                var players = SemiFunc.PlayerGetAll();
+                if (!players.Any()) return;
+                
+                foreach (var avatar in players)
+                {
+                    if (!avatar.photonView.IsMine)
+                    {
+                        // avatar.photonView.RPC("SyncShrinkConfigRPC", avatar.photonView.Owner, json);
+                        avatar.photonView.RPC("SyncShrinkConfigRPC", RpcTarget.All, json);
+                        LogWrapper.Info("[ShrinkSync] 📤 Envoi de la configuration en cours ...");
+                    }
+                }
+                
+                LogWrapper.Info("[ShrinkSync] 🎉 Configuration envoyée à tous les joueurs !");
+            }
+            catch (Exception ex)
+            {
+                LogWrapper.Error($"[ShrinkSync] ❌ Exception lors de l’envoi : {ex.Message}");
+            }
         }
     }
 }

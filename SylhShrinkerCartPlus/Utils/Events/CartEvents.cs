@@ -1,6 +1,6 @@
 ﻿using SylhShrinkerCartPlus.Components;
-using SylhShrinkerCartPlus.Utils.Shrink.Config;
-using SylhShrinkerCartPlus.Utils.Shrink.Utils.Cheat.Enemy;
+using SylhShrinkerCartPlus.Config;
+using SylhShrinkerCartPlus.Utils.Cheat.Enemy;
 
 namespace SylhShrinkerCartPlus.Utils.Events
 {
@@ -17,7 +17,7 @@ namespace SylhShrinkerCartPlus.Utils.Events
             ShrinkableTracker tracker = ShrinkerCartPatch.GetTracker(obj);
             if (tracker == null) return;
 
-            if (ConfigManager.shouldInstantKillEnemyInCart.Value)
+            if (StaticConfig.Instance.shouldInstantKillEnemyInCart)
             {
                 EnemyExecutionManager.TryMarkForExecution(tracker);
             }
@@ -26,7 +26,7 @@ namespace SylhShrinkerCartPlus.Utils.Events
             if (tracker.IsInsideSameCart(currentCart)) return;
             if (tracker.IsInCart()) return;
 
-            tracker.CurrentCart = currentCart;
+            // tracker.CurrentCart = currentCart;
             OnCartObjectAdded?.Invoke(currentCart, obj);
         }
 
