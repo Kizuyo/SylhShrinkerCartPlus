@@ -17,6 +17,7 @@ namespace SylhShrinkerCartPlus.Utils.Events
             ShrinkableTracker tracker = ShrinkerCartPatch.GetTracker(obj);
             if (tracker == null) return;
 
+            tracker.InitProtectTimer();
             if (StaticConfig.Instance.shouldInstantKillEnemyInCart)
             {
                 EnemyExecutionManager.TryMarkForExecution(tracker);

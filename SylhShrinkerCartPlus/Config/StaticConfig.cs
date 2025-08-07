@@ -17,7 +17,7 @@ namespace SylhShrinkerCartPlus.Config
                 {
                     if (instance == null)
                     {
-                        LogWrapper.Warning("[StaticConfig] Instance demandée avant initialisation ! Utilisation d’une config vide.");
+                        LogWrapper.Warning("Instance demandée avant initialisation ! Utilisation d’une config vide.");
                         instance = new StaticConfig();
                     }
                     return instance;
@@ -166,7 +166,7 @@ namespace SylhShrinkerCartPlus.Config
             }
             catch (Exception ex)
             {
-                LogWrapper.Error($"[StaticConfig] ❌ Erreur de désérialisation JSON : {ex.Message}");
+                LogWrapper.Error($"❌ Erreur de désérialisation JSON : {ex.Message}");
                 return new StaticConfig();
             }
         }

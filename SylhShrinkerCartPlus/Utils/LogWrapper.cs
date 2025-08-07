@@ -1,5 +1,6 @@
 ﻿using BepInEx.Logging;
 using SylhShrinkerCartPlus.Config;
+using System;
 
 namespace SylhShrinkerCartPlus.Utils
 {
@@ -7,32 +8,49 @@ namespace SylhShrinkerCartPlus.Utils
     {
         private static ManualLogSource Log => Plugin.Log;
 
-        public static void Info(string message)
+        private static string GenerateMessageStructure(string message, string prefix = "")
         {
-            if (ConfigManager.enableDebugLogs.Value)
-                Log.LogInfo(message);
+            string finalPrefix = string.IsNullOrWhiteSpace(prefix)
+                ? "SylhShrinkerCartPlus"
+                : prefix;
+
+            return $"[{DateTime.Now:HH:mm:ss}][{finalPrefix}] - {message}";
         }
 
-        public static void Debug(string message)
+        private static void LogMessage(LogLevel level, string message, string prefix = "", bool force = false)
         {
-            if (ConfigManager.enableDebugLogs.Value)
-                Log.LogDebug(message);
+            if (!force && !ConfigManager.enableDebugLogs.Value)
+                return;
+
+            string structuredMessage = GenerateMessageStructure(message, prefix);
+
+            switch (level)
+            {
+                case LogLevel.Info:
+                    Log.LogInfo(structuredMessage);
+                    break;
+                case LogLevel.Debug:
+                    Log.LogDebug(structuredMessage);
+                    break;
+                case LogLevel.Warning:
+                    Log.LogWarning(structuredMessage);
+                    break;
+                case LogLevel.Error:
+                    Log.LogError(structuredMessage);
+                    break;
+                default:
+                    Log.LogMessage(structuredMessage);
+                    break;
+            }
         }
 
-        public static void Warning(string message)
-        {
-            if (ConfigManager.enableDebugLogs.Value)
-                Log.LogWarning(message);
-        }
+        public static void Info(string message, string prefix = "") => LogMessage(LogLevel.Info, message, prefix);
+        public static void Debug(string message, string prefix = "") => LogMessage(LogLevel.Debug, message, prefix);
+        public static void Warning(string message, string prefix = "") => LogMessage(LogLevel.Warning, message, prefix);
+        public static void Error(string message, string prefix = "") => LogMessage(LogLevel.Error, message, prefix);
 
-        public static void Error(string message)
-        {
-            if (ConfigManager.enableDebugLogs.Value)
-                Log.LogError(message);
-        }
-
-        public static void ForceInfo(string message) => Log.LogInfo(message);
-        public static void ForceWarning(string message) => Log.LogWarning(message);
-        public static void ForceError(string message) => Log.LogError(message);
+        public static void ForceInfo(string message, string prefix = "") => LogMessage(LogLevel.Info, message, prefix, true);
+        public static void ForceWarning(string message, string prefix = "") => LogMessage(LogLevel.Warning, message, prefix, true);
+        public static void ForceError(string message, string prefix = "") => LogMessage(LogLevel.Error, message, prefix, true);
     }
 }

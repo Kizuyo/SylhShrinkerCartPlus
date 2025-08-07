@@ -9,7 +9,7 @@ namespace SylhShrinkerCartPlus.Utils.Shrink.Network
         public void SyncShrinkConfigRPC(string json)
         {
             StaticConfig.RefreshInstanceFromJson(json);
-            LogWrapper.Warning("[ShrinkSync] ✅ Configuration shrink synchronisée depuis le host !");
+            LogWrapper.Warning("✅ Configuration shrink synchronisée depuis le host !");
         }
     }
 }

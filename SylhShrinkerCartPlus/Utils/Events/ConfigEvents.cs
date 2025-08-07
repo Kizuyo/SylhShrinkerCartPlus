@@ -88,7 +88,7 @@ namespace SylhShrinkerCartPlus.Utils.Events
             foreach (var tracker in trackers)
             {
                 EnemyExecutionManager.TryMarkForExecution(tracker);
-                LogWrapper.Info($"[Config Refresh] 💀 Exécution instantanée forcée de {tracker.GrabObject.name}");
+                LogWrapper.Info($"💀 Exécution instantanée forcée de {tracker.GrabObject.name}");
             }
         }
 
@@ -103,7 +103,7 @@ namespace SylhShrinkerCartPlus.Utils.Events
             if (!RunManagerHelper.IsInsideValidLevel()) return;
             if (!SemiFunc.IsMasterClientOrSingleplayer()) return;
             
-            LogWrapper.Warning("[Config Refresh] ⚙️ Mise à jour des Batteries");
+            LogWrapper.Warning("⚙️ Mise à jour des Batteries");
 
             var trackers = ShrinkTrackerManager.Instance.GetAll().ToList();
             if (!trackers.Any()) return;

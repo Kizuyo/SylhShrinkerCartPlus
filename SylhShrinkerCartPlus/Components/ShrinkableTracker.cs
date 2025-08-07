@@ -11,7 +11,7 @@ namespace SylhShrinkerCartPlus.Components
     {
         public bool IsInCart() => CurrentCart != null;
         public bool IsInsideSameCart(PhysGrabCart otherCart) => CurrentCart.Equals(otherCart);
-        
+
         public PhysGrabCart CurrentCart { get; set; }
         public PhysGrabCart PreviousCart { get; set; }
 
@@ -26,7 +26,7 @@ namespace SylhShrinkerCartPlus.Components
 
         public bool CanResetBattery { get; set; } = false;
         public int BatteryLife { get; set; } = 0;
-        
+
         public PhysGrabObject GrabObject;
         private float _shrinkSpeed;
 
@@ -34,22 +34,25 @@ namespace SylhShrinkerCartPlus.Components
         public float InitialFragility { get; private set; }
         public float Fragility { get; private set; }
         public bool IsValidValuable { get; private set; }
-        
+
+        private readonly float _defaultProtectTimerValue = 3f;
+        public float ProtectTimer { get; private set; }
 
         public void Init(PhysGrabObject owner)
         {
             GrabObject = owner;
 
             IsValidValuable = IsValidShrinkableItem();
-            
+
             InitialScale = owner.transform.localScale;
             InitialMass = owner.massOriginal;
             _shrinkSpeed = StaticConfig.Instance.defaultShrinkSpeed;
 
             InitBattery();
             InitFragility();
+            InitProtectTimer();
         }
-        
+
         public void InitBattery()
         {
             if (HasBattery(out var battery))
@@ -58,14 +61,21 @@ namespace SylhShrinkerCartPlus.Components
                 BatteryLife = currentBattery;
             }
         }
-        
+
         public void InitFragility()
         {
             Detector = GrabObject.GetComponent<PhysGrabObjectImpactDetector>();
             if (Detector == null) return;
-            
+
             InitialFragility = Detector.fragility;
             Fragility = 0f;
+        }
+        
+        public void InitProtectTimer()
+        {
+            if (!IsValidValuable) return;
+            ProtectTimer = _defaultProtectTimerValue;
+            MakeUnbreakable();
         }
 
         public void MakeUnbreakable()
@@ -87,10 +97,10 @@ namespace SylhShrinkerCartPlus.Components
 
             if (GrabObject != null && InitialScale == Vector3.zero)
                 InitialScale = GrabObject.transform.localScale;
-            
+
             ShrinkTrackerManager.Instance.Register(this);
         }
-        
+
         void OnDestroy()
         {
             ShrinkTrackerManager.Instance.Unregister(this);
@@ -98,6 +108,14 @@ namespace SylhShrinkerCartPlus.Components
 
         private void Update()
         {
+            ProtectTimer -= Time.deltaTime;
+
+            if (ProtectTimer <= 0f && IsValidValuable)
+            {
+                ProtectTimer = 0f;
+                MakeBreakable();
+            }
+
             if (IsShrinking)
             {
                 MakeUnbreakable();
@@ -118,7 +136,7 @@ namespace SylhShrinkerCartPlus.Components
                     //     OriginalScale = InitialScale,
                     //     Dimensions = InitialScale
                     // });
-                    
+
                     ShrinkEvents.RaiseShrinkCompleted(this);
                 }
             }
@@ -141,7 +159,7 @@ namespace SylhShrinkerCartPlus.Components
                 }
             }
         }
-        
+
         public bool IsValuable()
         {
             return GrabObject.GetComponent<ValuableObject>() != null;
@@ -151,7 +169,7 @@ namespace SylhShrinkerCartPlus.Components
         {
             return GrabObject.GetComponent<SurplusValuable>() != null;
         }
-        
+
         public bool IsEnemyValuable()
         {
             return NameUtils.TryParseEnemyValuable(GrabObject.name, out _, out var enemyType);
@@ -179,7 +197,7 @@ namespace SylhShrinkerCartPlus.Components
                    IsSurplusValuable() ||
                    IsEnemyValuable();
         }
-        
+
         public void StartShrinking(Vector3 target)
         {
             TargetScale = target;
@@ -187,7 +205,7 @@ namespace SylhShrinkerCartPlus.Components
             IsShrunk = false;
             IsExpanded = false;
             IsExpanding = false;
-            
+
             ShrinkEvents.RaiseShrinkStarted(this);
         }
 
@@ -200,7 +218,7 @@ namespace SylhShrinkerCartPlus.Components
 
             ShrinkEvents.RaiseExpandedStarted(this);
         }
-        
+
         public void InterruptExpanding()
         {
             if (IsExpanding)
@@ -210,7 +228,7 @@ namespace SylhShrinkerCartPlus.Components
                 LogWrapper.Debug($"[Tracker] ✋ Expansion interrompue pour {GrabObject.name}");
             }
         }
-        
+
         public void InterruptShrinking()
         {
             if (IsShrinking)
@@ -220,7 +238,7 @@ namespace SylhShrinkerCartPlus.Components
                 LogWrapper.Debug($"[Tracker] ✋ Shrinking interrompue pour {GrabObject.name}");
             }
         }
-        
+
         public void ResetShrinkState()
         {
             IsShrunk = false;
@@ -239,7 +257,7 @@ namespace SylhShrinkerCartPlus.Components
             GrabObject.OverrideMass(mass);
             ShrinkEvents.RaiseMassChanged(this, mass);
         }
-        
+
         public void RestoreMass()
         {
             ApplyMass(InitialMass);
@@ -257,10 +275,10 @@ namespace SylhShrinkerCartPlus.Components
         public bool IsExpandable()
         {
             Vector3 currentScale = GrabObject.transform.localScale;
-            
-            return 
-                currentScale.x < InitialScale.x && 
-                currentScale.y < InitialScale.y && 
+
+            return
+                currentScale.x < InitialScale.x &&
+                currentScale.y < InitialScale.y &&
                 currentScale.z < InitialScale.z;
         }
     }

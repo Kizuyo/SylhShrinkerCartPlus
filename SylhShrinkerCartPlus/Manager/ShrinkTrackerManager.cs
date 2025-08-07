@@ -21,7 +21,7 @@ namespace SylhShrinkerCartPlus.Manager
             if (!_trackers.ContainsKey(tracker.GrabObject))
             {
                 _trackers.Add(tracker.GrabObject, tracker);
-                LogWrapper.Debug($"[TrackerManager] ✅ Registered: {tracker.GrabObject.name}");
+                LogWrapper.Debug($"✅ Registered: {tracker.GrabObject.name}");
             }
         }
 
@@ -31,7 +31,7 @@ namespace SylhShrinkerCartPlus.Manager
 
             if (_trackers.Remove(tracker.GrabObject))
             {
-                LogWrapper.Debug($"[TrackerManager] ❌ Unregistered: {tracker.GrabObject.name}");
+                LogWrapper.Debug($"❌ Unregistered: {tracker.GrabObject.name}");
             }
         }
 
