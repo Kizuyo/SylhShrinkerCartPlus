@@ -39,7 +39,7 @@ Check out the [wiki](https://thunderstore.io/c/repo/p/Sylhaance/SylhShrinkerCart
 ## v0.4.3
 - Overall improvement of the mod for multiplayer (Only the host's configuration should be taken into account now)
 - Protects Valuables during shrinking and expanding processes
-- 
+
 ## v0.4.2
 - I've temporarily removed the unbreakable feature — I might reintroduce it later. I just need more information to make it work properly
 
