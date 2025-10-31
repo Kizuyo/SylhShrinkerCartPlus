@@ -8,13 +8,15 @@ namespace SylhShrinkerCartPlus.Resolver.Valuable
         private static readonly Dictionary<Func<LevelValuables, List<GameObject>>, ValuableCategoryEnum> _mappings =
             new()
             {
-                { v => v.tiny, ValuableCategoryEnum.Tiny },
-                { v => v.small, ValuableCategoryEnum.Small },
-                { v => v.medium, ValuableCategoryEnum.Medium },
-                { v => v.big, ValuableCategoryEnum.Big },
-                { v => v.wide, ValuableCategoryEnum.Wide },
-                { v => v.tall, ValuableCategoryEnum.Tall },
-                { v => v.veryTall, ValuableCategoryEnum.VeryTall },
+                // Repo v0.3.0 Fix
+                // Game update changed LevelValuables lists from GameObject to PrefabRef so now we map PrefabRef.Prefab to restore compatibility.
+                { v => v.tiny.Select(p => p.Prefab).ToList(), ValuableCategoryEnum.Tiny },
+                { v => v.small.Select(p => p.Prefab).ToList(), ValuableCategoryEnum.Small },
+                { v => v.medium.Select(p => p.Prefab).ToList(), ValuableCategoryEnum.Medium },
+                { v => v.big.Select(p => p.Prefab).ToList(), ValuableCategoryEnum.Big },
+                { v => v.wide.Select(p => p.Prefab).ToList(), ValuableCategoryEnum.Wide },
+                { v => v.tall.Select(p => p.Prefab).ToList(), ValuableCategoryEnum.Tall },
+                { v => v.veryTall.Select(p => p.Prefab).ToList(), ValuableCategoryEnum.VeryTall },
             };
 
         public ValuableCategoryBase? ResolveCategory(PhysGrabObject item)
