@@ -8,6 +8,8 @@ namespace SylhShrinkerCartPlus.Resolver.Valuable
         private static readonly Dictionary<Func<LevelValuables, List<GameObject>>, ValuableCategoryEnum> _mappings =
             new()
             {
+                // REPO v0.3.0 Compatibility
+                // LevelValuables stores PrefabRef objects instead of GameObjects; extract PrefabRef.Prefab so mappings return actual prefab GameObjects
                 { v => v.tiny.Select(p => p.Prefab).ToList(), ValuableCategoryEnum.Tiny },
                 { v => v.small.Select(p => p.Prefab).ToList(), ValuableCategoryEnum.Small },
                 { v => v.medium.Select(p => p.Prefab).ToList(), ValuableCategoryEnum.Medium },
